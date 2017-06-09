@@ -1,5 +1,7 @@
 from random import randint
 
+MOCK_UP = [31, 32, 33, 35, 35, 38, 37, 41, 39, 44, 41, 68]
+
 
 class Action(object):
     def __init__(self, do, undo):
@@ -101,32 +103,50 @@ class BuildCityAction(Action):
         super().__init__(do, undo)
 
 
+class PlaceRobberAction(Action):
+    def __init__(self, board, player, tile_id, knight=False):
+        self.done = False
+        self.board = board
+        self.current_player = player
+
+        def do():
+            self.board.tiles[self.board.current_blocked].blocked = False
+            # self.board.release_settelments(self.board.previous_blocked)
+            self.board.previous_blocked = self.board.current_blocked
+            self.board.tiles[tile_id].blocked = True
+            self.board.current_blocked = tile_id
+            print("Player #{} placed the robber on tile {}".format(
+                self.current_player.player_id, self.board.tiles[tile_id].tile_id))
+            # self.board.block_settelments(tile_id)
+            if knight:
+                self.current_player.knights += 1
+            self.done = True
+            return True
+
+        def undo():
+            if self.done:
+                if self.board.previous_blocked:
+                    self.board.tiles[self.board.previous_blocked].blocked = True
+                    # self.board.block_settelments(self.board.previous_blocked)
+                self.board.current_blocked = self.board.previous_blocked
+                self.board.tiles[tile_id].blocked = False
+                print("Player #{} undid the robber on tile {}".format(
+                    self.current_player.player_id, self.board.tiles[tile_id].tile_id))
+                # self.board.release_settelments(self.board.current_blocked)
+                if knight:
+                    self.current_player.knights -= 1
+                return True
+
+        super().__init__(do, undo)
+
+
 class Turn(object):
     def __init__(self, board, current_player):
         self.board = board
         self.current_player = current_player
-        self.dice = None
         self.actions = []
-        # self.options = {
-        #     'dice': self.roll_dice(),
-        #     'road': True if self.road() else False,
-        #     'sett': True if self.sett() else False,
-        #     'knight': 1,
-        #     'undo': self.undo()
-        # }
 
-    # def road(self):
-    #     road_id = input("Enter the road id you would like to build: ")
-    #     self.build_road(road_id)
-    #
-    # def sett(self):
-    #     sett_id = input("Enter the settelment id you would like to build: ")
-    #     if self.board.settelments[sett_id].owner is self.current_player:
-    #         self.upgrade_settelment(sett_id)
-    #     else:
-    #         self.build_settelment(sett_id)
-
-    def pregame_player_action(self):
+    def pregame_player_action(self, mock_up=False):
         # Undo == 666
         # End turn == 777
         self.actions = []
@@ -134,6 +154,13 @@ class Turn(object):
         built_road = False
         done_turn = False
         while not built_sett:
+            if mock_up:
+                choice_sett = MOCK_UP[0]
+                print("Player #{}, where would you like to place a settelment: {}".format(
+                    self.current_player.player_id, MOCK_UP[0]))
+                del MOCK_UP[0]
+                if self.build_settelment(choice_sett, first=True):
+                    break
             choice_sett = int(input("Player #{}, where would you like to place a settelment: ".format(
                 self.current_player.player_id)))
             if choice_sett not in list(range(0, 54)):
@@ -148,6 +175,13 @@ class Turn(object):
                 if self.build_settelment(choice_sett, first=True):
                     built_sett = True
         while not built_road:
+            if mock_up:
+                choice_road = MOCK_UP[0]
+                print("Player #{}, where would you like to place a road: {}".format(
+                    self.current_player.player_id, MOCK_UP[0]))
+                del MOCK_UP[0]
+                if self.build_road(choice_road, choice_sett):
+                    break
             choice_road = int(input("Player #{}, where would you like to place a road: ".format(
                 self.current_player.player_id)))
             if choice_road not in list(range(0, 72)):
@@ -163,6 +197,8 @@ class Turn(object):
                 if self.build_road(choice_road, choice_sett):
                     built_road = True
         while not done_turn:
+            if mock_up:
+                break
             choice_end = int(input("Player #{}, end the turn or undo (777 = end, 666 = undo) ".format(
                 self.current_player.player_id)))
             if choice_end == 777:
@@ -174,41 +210,55 @@ class Turn(object):
         return True
 
     def player_action(self):
-        """
-        dice
-        road
-        settelment
-            city
-        knight
-        undo
-        end turn
-        :return: 
-        """
         while True:
             choice = input("Player #{}, what would you like to do: ".format(self.current_player.player_id))
-            if choice not in self.options:
-                print("Invalid input, try again")
+            if choice == 'End_Turn':
+                break
             else:
-                if choice is 'end':
-                    break
-                # self.options[choice]
-                pass
+                self.parse_action(choice)
+        return True
 
-    def roll_dice(self):
-        self.dice = randint(1, 6) + randint(1, 6)
-        print("Dice: ", self.dice)
-        self.check_profits()
+    def parse_action(self, choice):
+        if len(choice) is 3:
+            if choice[0] == 'R':
+                self.build_road(int(choice[1:]))
+            elif choice[0] == 'S':
+                self.build_settelment(int(choice[1:]))
+            elif choice[0] == 'D':
+                self.roll_dice(int(choice[1:]))
+        else:
+            if choice == 'Dice':
+                self.roll_dice()
+            elif choice == 'Knight':
+                self.place_robber(knight=True)
+            elif choice == 'Undo':
+                self.undo()
+
+    def roll_dice(self, mock=None):
+        if mock:
+            self.board.dice = mock
+        else:
+            if self.board.dice:
+                print("Cannot roll dice more than once")
+                return
+            self.board.dice = randint(1, 6) + randint(1, 6)
+        print("Dice: ", self.board.dice)
+        if self.board.dice == 7:
+            self.place_robber()
+        else:
+            self.check_profits()
 
     def check_profits(self):
         for t in self.board.tiles:
-            if self.dice is t.number:
+            if self.board.dice is t.number:
                 if not t.blocked:
                     for s in t.buildings:
                         if s.owner is not None:
-                            print("Player #{player} has gained {cards} {resource}".format(
+                            print("Player #{player} has gained {cards} {resource} from settelment {sett}".format(
                                 player=s.owner.player_id,
                                 cards=2 if s.city else 1,
-                                resource=t.resource
+                                resource=t.resource,
+                                sett=s.settelment_id
                             ))
 
     def build_road(self, road_id, sett=None):
@@ -278,13 +328,23 @@ class Turn(object):
         if action.do():
             return True
 
-    def place_robber(self, tile_id):
-        self.board.move_robber(tile_id)
-
-    def use_knight(self, tile_id):
-        self.board.move_robber(tile_id)
-        self.current_player.knights += 1
-        self.current_player.points += 1
+    def place_robber(self, knight=False):
+        while True:
+            tile_id = int(input("Which tile would you like to block: "))
+            if tile_id not in list(range(0, 19)):
+                print("Invalid tile number")
+            else:
+                if tile_id is self.board.current_blocked:
+                    print("The robber cannot remain on the same tile")
+                else:
+                    break
+        if knight:
+            action = PlaceRobberAction(self.board, self.current_player, tile_id, knight)
+        else:
+            action = PlaceRobberAction(self.board, self.current_player, tile_id)
+        self.actions.append(action)
+        if action.do():
+            return True
 
     def count_longest_road(self):
         pass

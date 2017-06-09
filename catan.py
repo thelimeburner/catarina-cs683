@@ -23,11 +23,9 @@ def main():
     while True:
         if game.player_turn():
             if game.winner:
-                game.end_game()
-            else:
-                game.change_player()
-    game.end_game()
-
+                if game.end_game():
+                    break
+    print("End reached")
 
 if __name__ == '__main__':
     main()

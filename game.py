@@ -7,7 +7,6 @@ class Game(object):
         self.players = players
         self.board = board
         self.first_player = None
-        self.dice = None
         self.current_player = None
         self.pregame_turns_list = []
         self.robber = None
@@ -15,14 +14,16 @@ class Game(object):
         self.winner = None
 
     def pregame_turns(self, number_of_players):
-        self.first_player = randint(0, number_of_players)
-        players = list(range(self.first_player, number_of_players))
-        if self.first_player is not 0 or number_of_players-1:
-            for i in list(range(0, self.first_player)):
+        first = randint(0, number_of_players-1)
+        self.first_player = self.players[first]
+        print("First player is Player #{}".format(self.first_player.player_id))
+        players = list(range(first, number_of_players))
+        if first is not 0 or number_of_players-1:
+            for i in list(range(0, first)):
                 players.append(i)
             for i in reversed(players):
                 players.append(i)
-        elif self.first_player is 0:
+        elif first is 0:
             for i in reversed(players):
                 players.append(i)
         else:
@@ -46,40 +47,37 @@ class Game(object):
         return True
 
     def seat_players(self):
-        n = len(self.players)
-        i = 0
-        for p in self.players:
-            if i == (n - 1):
-                i = 0
-            p.next_player = self.players[i]
-            i += 1
+        self.players[0].next_player = self.players[1]
+        self.players[1].next_player = self.players[2]
+        if len(self.players) == 3:
+            self.players[2].next_player = self.players[0]
+        else:
+            self.players[2].next_player = self.players[3]
+            self.players[3].next_player = self.players[0]
         self.current_player = self.first_player
 
     def player_turn(self, pregame=False):
         print("Current turn: Player #{}".format(self.current_player.player_id))
         self.turn = Turn(self.board, self.current_player)
-        if pregame:
-            done = False
-            while not done:
-                if self.turn.pregame_player_action():
-                    done = self.end_turn()
-        else:
-            if self.turn.player_action():
-                return self.end_turn()
+        done = False
+        while not done:
+            if pregame:
+                    if self.turn.pregame_player_action(mock_up=True):
+                        done = self.end_turn()
+            else:
+                    if self.turn.player_action():
+                        done = self.end_turn()
         return done
-
-    def change_player(self):
-        raise NotImplementedError
 
     def end_turn(self):
         # self.count_longest_road()
+        # self.count_largest_army()
+        self.board.dice = None
         if self.current_player.points >= 10:
             self.winner = self.current_player
         self.current_player = self.current_player.next_player
         return True
 
     def end_game(self):
-        pass
-
-
-
+        print("The winner is: Player #{} with {} victory points".format(self.winner.player_id, self.winner.points))
+        return True

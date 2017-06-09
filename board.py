@@ -37,6 +37,7 @@ class Settelment(object):
         self.settelment_id = settelment_id
         self.available = True
         self.owner = None
+        self.blocked = False
         self.numbers = set([])
         self.settelment = True
         self.city = False
@@ -63,6 +64,7 @@ class Settelment(object):
 class Board(object):
     def __init__(self, board_map):
         self.board_map = board_map
+        self.dice = None
         self.tiles = []
         self.roads = []
         self.settelments = []
@@ -85,7 +87,7 @@ class Board(object):
             del resources[resource_index]
             last_n -= 1
         starting_point = randrange(0, 11, 2)
-        anchor_points = {2: 13, 4: 14, 6: 15, 8: 16, 10: 17}
+        # anchor_points = {2: 13, 4: 14, 6: 15, 8: 16, 10: 17}
         anc = {
             0: list(range(0, 19)),
             2: list(range(2, 12)) + [0, 1] + list(range(13, 18)) + [12, 18],
@@ -94,10 +96,6 @@ class Board(object):
             8: list(range(8, 12)) + list(range(0, 8)) + [16, 17] + list(range(12, 16)) + [18],
             10: [10, 11] + list(range(0, 10)) + [17] + list(range(12, 17)) + [18]
         }
-        # if starting_point is not 0:
-        #     tiles_id = list(range(starting_point, 12)) + list(range(0, starting_point)) + list(range(anchor_points[starting_point], 19))
-        # else:
-        #     tiles_id = list(range(0, 19))
         tiles_id = anc[starting_point]
         for tile in tiles_id:
             if self.tiles[tile].resource is 'Desert':
@@ -114,6 +112,7 @@ class Board(object):
         self._connect_roads()
         self._connect_settelments()
         self._connect_tiles()
+        self._init_robber()
 
     def _connect_tiles(self):
         for tile in self.tiles:
@@ -148,14 +147,16 @@ class Board(object):
                 if int(key_road) is road.road_id:
                     road.neighbour_settelments = [self.settelments[idx] for idx in neighbour_settelments]
 
-    def move_robber(self, tile_id):
-        self.previous_blocked = self.current_blocked
-        self.current_blocked = tile_id
+    def _init_robber(self):
+        for t in self.tiles:
+            if t.resource == 'Desert':
+                self.current_blocked = t.tile_id
 
-    def mark_settelment_blocked(self, settelment_ids):
-        for i in self.settelments:
-            if i.settelment_id in settelment_ids:
-                i.available = False
-                print("Settelment {} is now blocked".format(i.settelment_id))
+    def block_settelments(self, tile_id):
+        for s in self.tiles[tile_id].buildings:
+            s.blocked = True
+            print("Settelment {} is now blocked".format(s.settelment_id))
 
-
+    def release_settelments(self, tile_id):
+        for s in self.tiles[tile_id].buildings:
+            s.blocked = False
