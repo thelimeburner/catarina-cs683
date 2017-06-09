@@ -1,6 +1,4 @@
 from random import randint
-import re
-import logging
 
 
 class Action(object):
@@ -20,8 +18,9 @@ class BuildRoadAction(Action):
             road.available = False
             player.roads_built.append(road)
             player.roads -= 1
-            logging.info("Player #{} has built road {}".format(player.player_id, road_id))
+            print("Player #{} has built road {}".format(player.player_id, road.road_id))
             self.done = True
+            return True
 
         def undo():
             if self.done:
@@ -29,7 +28,8 @@ class BuildRoadAction(Action):
                 road.available = True
                 player.roads_built.remove(road)
                 player.roads += 1
-                logging.info("Player #{} undid the road {}".format(player.player_id, road_id))
+                print("Player #{} undid the road {}".format(player.player_id, road.road_id))
+                return True
 
         super().__init__(do, undo)
 
@@ -49,7 +49,8 @@ class BuildSettelmentAction(Action):
             self.current_player.points += 1
             self.current_player.settlements -= 1
             self.done = True
-            logging.info("Player #{} built a settelment on {}".format(self.current_player.player_id, sett.settelment_id))
+            print("Player #{} built a settelment on {}".format(self.current_player.player_id, sett.settelment_id))
+            return True
 
         def undo():
             if self.done:
@@ -60,7 +61,9 @@ class BuildSettelmentAction(Action):
                     s.available = True
                 self.current_player.points -= 1
                 self.current_player.settlements += 1
-                logging.info("Player #{} undid the settelment on {}".format(self.current_player.player_id, sett.settelment_id))
+                print("Player #{} undid the settelment on {}".format(self.current_player.player_id, sett.settelment_id))
+                return True
+            return False
 
         super().__init__(do, undo)
 
@@ -80,7 +83,8 @@ class BuildCityAction(Action):
             sett.settelment = False
             sett.city = True
             self.done = True
-            logging.info("Player #{} built a city on {}".format(self.current_player.player_id, sett.settelment_id))
+            print("Player #{} built a city on {}".format(self.current_player.player_id, sett.settelment_id))
+            return True
 
         def undo():
             if self.done:
@@ -91,7 +95,8 @@ class BuildCityAction(Action):
                 self.current_player.settlements -= 1
                 sett.settelment = True
                 sett.city = False
-                logging.info("Player #{} undid the city on {}".format(self.current_player.player_id, sett.settelment_id))
+                print("Player #{} undid the city on {}".format(self.current_player.player_id, sett.settelment_id))
+                return True
 
         super().__init__(do, undo)
 
@@ -102,6 +107,71 @@ class Turn(object):
         self.current_player = current_player
         self.dice = None
         self.actions = []
+        # self.options = {
+        #     'dice': self.roll_dice(),
+        #     'road': True if self.road() else False,
+        #     'sett': True if self.sett() else False,
+        #     'knight': 1,
+        #     'undo': self.undo()
+        # }
+
+    # def road(self):
+    #     road_id = input("Enter the road id you would like to build: ")
+    #     self.build_road(road_id)
+    #
+    # def sett(self):
+    #     sett_id = input("Enter the settelment id you would like to build: ")
+    #     if self.board.settelments[sett_id].owner is self.current_player:
+    #         self.upgrade_settelment(sett_id)
+    #     else:
+    #         self.build_settelment(sett_id)
+
+    def pregame_player_action(self):
+        # Undo == 666
+        # End turn == 777
+        self.actions = []
+        built_sett = False
+        built_road = False
+        done_turn = False
+        while not built_sett:
+            choice_sett = int(input("Player #{}, where would you like to place a settelment: ".format(
+                self.current_player.player_id)))
+            if choice_sett not in list(range(0, 54)):
+                if choice_sett == 666:
+                    if len(self.actions) > 0:
+                        self.undo()
+                        return False
+                    else:
+                        print("Nothing to Undo")
+                print("Invalid input, try again")
+            else:
+                if self.build_settelment(choice_sett, first=True):
+                    built_sett = True
+        while not built_road:
+            choice_road = int(input("Player #{}, where would you like to place a road: ".format(
+                self.current_player.player_id)))
+            if choice_road not in list(range(0, 72)):
+                if choice_road == 666:
+                    if len(self.actions) > 0:
+                        self.undo()
+                        self.undo()
+                        return False
+                    else:
+                        print("Nothing to Undo")
+                print("Invalid input, try again")
+            else:
+                if self.build_road(choice_road, choice_sett):
+                    built_road = True
+        while not done_turn:
+            choice_end = int(input("Player #{}, end the turn or undo (777 = end, 666 = undo) ".format(
+                self.current_player.player_id)))
+            if choice_end == 777:
+                done_turn = True
+            elif choice_end == 666:
+                self.undo()
+                self.undo()
+                return False
+        return True
 
     def player_action(self):
         """
@@ -114,114 +184,99 @@ class Turn(object):
         end turn
         :return: 
         """
-        def road():
-            road_id = input("Enter the road id you would like to build: ")
-            self.build_road(road_id)
-
-        def sett():
-            sett_id = input("Enter the settelment id you would like to build: ")
-            if self.board.settelments[sett_id].owner is self.current_player:
-                self.upgrade_settelment(sett_id)
+        while True:
+            choice = input("Player #{}, what would you like to do: ".format(self.current_player.player_id))
+            if choice not in self.options:
+                print("Invalid input, try again")
             else:
-                self.build_settelment(sett_id)
-
-        options = {
-            'dice': self.roll_dice(),
-            'road': road(),
-            'sett': sett(),
-            'knight': 1,
-            'undo': self.undo(),
-            'end': self.end_turn()
-        }
-        choice = input("Player #{}, what would you like to do: ".format(self.current_player.player_id))
-        options[choice]
-
-    def end_turn(self):
-        """
-        Sums up players points and if >= 10 game ends
-        :return: 
-        """
-        # self.count_longest_road()
-        if self.current_player.points >= 10:
-            return False
-        else:
-            self.player_turn(self.current_player.next_player)
+                if choice is 'end':
+                    break
+                # self.options[choice]
+                pass
 
     def roll_dice(self):
-        """
-        Rolls the dice and calls check_profits()
-        :return: 
-        """
         self.dice = randint(1, 6) + randint(1, 6)
         print("Dice: ", self.dice)
         self.check_profits()
 
     def check_profits(self):
-        """
-        Each players gain resources if not blocked by the robber
-        :return: 
-        """
         for t in self.board.tiles:
             if self.dice is t.number:
                 if not t.blocked:
                     for s in t.buildings:
                         if s.owner is not None:
-                            logging.info("Player #{player} has gained {cards} {resource}".format(
+                            print("Player #{player} has gained {cards} {resource}".format(
                                 player=s.owner.player_id,
                                 cards=2 if s.city else 1,
                                 resource=t.resource
                             ))
 
-    def build_road(self, road_id):
+    def build_road(self, road_id, sett=None):
         road = self.board.roads[road_id]
         if self.current_player.roads > 0:
-            if not self.road_spot_available(road):
-                raise Exception("Spot not available!")
+            if sett:
+                if not self.road_spot_available(road, self.board.settelments[sett]):
+                    print("Spot not available!")
+                    return False
+            else:
+                if not self.road_spot_available(road):
+                    print("Spot not available!")
+                    return False
         else:
             raise Exception("Player {} has no roads left to build".format(self.current_player.player_id))
         action = BuildRoadAction(self.board, self.current_player, road)
-        self.actions += action
+        self.actions.append(action)
         action.do()
+        return True
 
-    def road_spot_available(self, road):
+    def road_spot_available(self, road, pregame_sett=None):
         if road.available:
-            for sett in road.neighbour_settelments:
-                if sett.owner is self.current_player:
-                    return True
-                elif sett.owner is None:
-                    for r in sett.neighbour_roads:
+            if pregame_sett:
+                if pregame_sett.owner is self.current_player:
+                    for r in pregame_sett.neighbour_roads:
                         if r is road:
-                            continue
-                        if r.owner is self.current_player:
                             return True
+            else:
+                for sett in road.neighbour_settelments:
+                    if sett.owner is self.current_player:
+                        return True
+                    elif sett.owner is None:
+                        for r in sett.neighbour_roads:
+                            if r is road:
+                                continue
+                            if r.owner is self.current_player:
+                                return True
         return False
 
     def build_settelment(self, sett_id, first=False):
         sett = self.board.settelments[sett_id]
         if not self.sett_spot_available(sett, first):
-            logging.info("Cannot build on a settelment on", sett_id)
+            print("Cannot build on a settelment on", sett_id)
+            return False
         action = BuildSettelmentAction(self.board, self.current_player, sett)
-        self.actions += action
-        action.do()
+        self.actions.append(action)
+        if action.do():
+            return True
 
     def sett_spot_available(self, sett, first):
         if sett.available:
-            if all(sett.neighbours.available):
-                if first:
-                    return True
-                else:
-                    for road in sett.neighbour_roads:
-                        if road.owner is self.current_player:
-                            return True
+            if first:
+                return True
+            else:
+                for road in sett.neighbour_roads:
+                    if road.owner is self.current_player:
+                        return True
         return False
 
     def upgrade_settelment(self, settelment_id):
         sett = self.board.settelments[settelment_id]
         if sett.owner is not self.current_player:
-            logging.info("Cannot build on a city on", sett.settelment_id)
+            print("Cannot build on a city on", sett.settelment_id)
+            return False
         action = BuildCityAction(self.board, self.current_player, sett)
-        self.actions += action
-        action.do()
+        self.actions.append(action)
+        if action.do():
+            return True
 
     def place_robber(self, tile_id):
         self.board.move_robber(tile_id)
@@ -235,6 +290,8 @@ class Turn(object):
         pass
 
     def undo(self):
+        if len(self.actions) == 0:
+            return False
         last_action = self.actions[-1]
         last_action.undo()
         self.actions.remove(last_action)
