@@ -11,6 +11,4 @@ class Player(object):
         self.cities_built = []
         self.cities = 4
         self.knights = 0
-        self.largest_army = False
-        self.longest_road = False
         self.points = 0

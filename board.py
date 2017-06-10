@@ -68,6 +68,8 @@ class Board(object):
         self.tiles = []
         self.roads = []
         self.settelments = []
+        self.longest_road = None
+        self.largest_army = None
         self.previous_blocked = None
         self.current_blocked = None
 
@@ -152,11 +154,3 @@ class Board(object):
             if t.resource == 'Desert':
                 self.current_blocked = t.tile_id
 
-    def block_settelments(self, tile_id):
-        for s in self.tiles[tile_id].buildings:
-            s.blocked = True
-            print("Settelment {} is now blocked".format(s.settelment_id))
-
-    def release_settelments(self, tile_id):
-        for s in self.tiles[tile_id].buildings:
-            s.blocked = False

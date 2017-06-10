@@ -71,13 +71,28 @@ class Game(object):
 
     def end_turn(self):
         # self.count_longest_road()
-        # self.count_largest_army()
+        self.count_largest_army()
         self.board.dice = None
         if self.current_player.points >= 10:
             self.winner = self.current_player
+            return True
         self.current_player = self.current_player.next_player
         return True
 
     def end_game(self):
         print("The winner is: Player #{} with {} victory points".format(self.winner.player_id, self.winner.points))
         return True
+
+    def count_largest_army(self):
+        if self.current_player.knights >= 3:
+            if self.board.largest_army:
+                if self.current_player.knights > self.board.largest_army.knights:
+                    self.board.largest_army.points -= 2
+                    self.board.largest_army = self.current_player
+                    self.current_player.points += 2
+            else:
+                self.board.largest_army = self.current_player
+                self.current_player.points += 2
+
+    def count_longest_road(self):
+        pass

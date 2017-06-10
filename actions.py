@@ -1,6 +1,7 @@
 from random import randint
 
 MOCK_UP = [31, 32, 33, 35, 35, 38, 37, 41, 39, 44, 41, 68]
+FRIENDLY_ROBBER = True
 
 
 class Action(object):
@@ -108,16 +109,18 @@ class PlaceRobberAction(Action):
         self.done = False
         self.board = board
         self.current_player = player
+        self.knight = knight
 
         def do():
             self.board.tiles[self.board.current_blocked].blocked = False
-            # self.board.release_settelments(self.board.previous_blocked)
             self.board.previous_blocked = self.board.current_blocked
             self.board.tiles[tile_id].blocked = True
             self.board.current_blocked = tile_id
-            print("Player #{} placed the robber on tile {}".format(
-                self.current_player.player_id, self.board.tiles[tile_id].tile_id))
-            # self.board.block_settelments(tile_id)
+            print("Player #{} placed the robber on tile {}: The number {} and resource {}".format(
+                self.current_player.player_id,
+                self.board.tiles[tile_id].tile_id,
+                self.board.tiles[tile_id].number,
+                self.board.tiles[tile_id].resource))
             if knight:
                 self.current_player.knights += 1
             self.done = True
@@ -127,12 +130,14 @@ class PlaceRobberAction(Action):
             if self.done:
                 if self.board.previous_blocked:
                     self.board.tiles[self.board.previous_blocked].blocked = True
-                    # self.board.block_settelments(self.board.previous_blocked)
                 self.board.current_blocked = self.board.previous_blocked
                 self.board.tiles[tile_id].blocked = False
                 print("Player #{} undid the robber on tile {}".format(
                     self.current_player.player_id, self.board.tiles[tile_id].tile_id))
-                # self.board.release_settelments(self.board.current_blocked)
+                print("Robber moved back to tile {}: The number {} and resource {}".format(
+                    self.board.tiles[self.board.previous_blocked].tile_id,
+                    self.board.tiles[self.board.previous_blocked].number,
+                    self.board.tiles[self.board.previous_blocked].resource))
                 if knight:
                     self.current_player.knights -= 1
                 return True
@@ -223,14 +228,26 @@ class Turn(object):
             if choice[0] == 'R':
                 self.build_road(int(choice[1:]))
             elif choice[0] == 'S':
-                self.build_settelment(int(choice[1:]))
+                if self.board.settelments[int(choice[1:])].owner is self.current_player:
+                    if not self.board.settelments[int(choice[1:])].city:
+                        self.upgrade_settelment(int(choice[1:]))
+                    else:
+                        print("Cannot upgrade. It is already a city")
+                        return
+                else:
+                    self.build_settelment(int(choice[1:]))
             elif choice[0] == 'D':
                 self.roll_dice(int(choice[1:]))
         else:
             if choice == 'Dice':
                 self.roll_dice()
             elif choice == 'Knight':
-                self.place_robber(knight=True)
+                for a in self.actions:
+                    if hasattr(a, 'knight'):
+                        if a.knight:
+                            print("Cannot use more than one development card per turn")
+                            return
+                self.place_robber(knight=True, friendly_robber=FRIENDLY_ROBBER)
             elif choice == 'Undo':
                 self.undo()
 
@@ -244,7 +261,7 @@ class Turn(object):
             self.board.dice = randint(1, 6) + randint(1, 6)
         print("Dice: ", self.board.dice)
         if self.board.dice == 7:
-            self.place_robber()
+            self.place_robber(friendly_robber=FRIENDLY_ROBBER)
         else:
             self.check_profits()
 
@@ -328,7 +345,7 @@ class Turn(object):
         if action.do():
             return True
 
-    def place_robber(self, knight=False):
+    def place_robber(self, knight=False, friendly_robber=False):
         while True:
             tile_id = int(input("Which tile would you like to block: "))
             if tile_id not in list(range(0, 19)):
@@ -337,7 +354,13 @@ class Turn(object):
                 if tile_id is self.board.current_blocked:
                     print("The robber cannot remain on the same tile")
                 else:
-                    break
+                    if friendly_robber:
+                        if self.friendly_robber(tile_id):
+                            break
+                        else:
+                            print("Cannot rob a spot belongs to a player that has less then 3 points")
+                    else:
+                        break
         if knight:
             action = PlaceRobberAction(self.board, self.current_player, tile_id, knight)
         else:
@@ -345,6 +368,20 @@ class Turn(object):
         self.actions.append(action)
         if action.do():
             return True
+
+    def friendly_robber(self, tile_id):
+        if self.board.tiles[tile_id].resource == 'Desert':
+            return True
+        ok = []
+        for s in self.board.tiles[tile_id].buildings:
+            if s.owner:
+                if s.owner.points > 2:
+                    ok.append(True)
+                else:
+                    ok.append(False)
+        if all(ok):
+            return True
+        return False
 
     def count_longest_road(self):
         pass
