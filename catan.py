@@ -1,6 +1,7 @@
+from players import Player
 from board import Board
 from game import Game
-from players import Player
+import game_config
 import logging
 import json
 
@@ -10,16 +11,21 @@ def main():
                         datefmt="%Y/%m/%d %H:%M:%S",
                         level=logging.INFO)
     logging.info("Starting a new game")
-    players = [Player(1), Player(2), Player(3)]
     with open("board_map.json") as json_data:
         board_map = json.load(json_data)
     board = Board(board_map)
-    board.generate_new_board()
-    game = Game(players, board)
-    # PreGame starts here
-    if game.pregame():
-        print("Game starts now")
+    # board.generate_new_board()
+    playing_colors = ['Red', 'Blue', 'White']
+    game = Game(playing_colors, board)
+    game.determine_starting_color()
     game.seat_players()
+    # PreGame starts here
+    for player in game.players:
+        game.current_player = player
+        game.player_turn(pregame=True)
+    for player in reversed(game.players):
+        game.current_player = player
+        game.player_turn(pregame=True)
     while True:
         if game.player_turn():
             if game.winner:

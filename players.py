@@ -1,8 +1,8 @@
 class Player(object):
-    def __init__(self, player_id):
-        self.player_id = player_id
+    def __init__(self, color):
+        self.color = color
+        self.player_id = None
         self.name = None
-        self.color = None
         self.next_player = None
         self.roads_built = []
         self.roads = 15
