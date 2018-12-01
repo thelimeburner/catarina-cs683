@@ -1,5 +1,6 @@
 from collections import defaultdict
 from players import Player
+import view
 from random import randint
 from turn import Turn
 import networkx as nx
@@ -43,6 +44,11 @@ class Game(object):
                         done = self.end_turn()
         return done
 
+    def end_pregame_turn(self):
+        self.current_player = self.current_player.next_player
+        view.update_view(self.board)
+        return True
+
     def end_turn(self):
         self.count_longest_road()
         self.count_largest_army()
@@ -51,6 +57,7 @@ class Game(object):
             self.winner = self.current_player
             return True
         self.current_player = self.current_player.next_player
+        view.update_view(self.board)
         return True
 
     def end_game(self):

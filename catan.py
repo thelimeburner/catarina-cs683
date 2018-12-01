@@ -2,6 +2,7 @@ from players import Player
 from board import Board
 from game import Game
 import game_config
+import view
 import logging
 import json
 
@@ -11,10 +12,13 @@ def main():
                         datefmt="%Y/%m/%d %H:%M:%S",
                         level=logging.INFO)
     logging.info("Starting a new game")
+    # import the asci board json
+    view.initialize_board()
+    # import the board skeleton in json format
     with open("board_map.json") as json_data:
         board_map = json.load(json_data)
     board = Board(board_map)
-    # board.generate_new_board()
+    board.generate_new_board()
     playing_colors = ['Red', 'Blue', 'White']
     game = Game(playing_colors, board)
     game.determine_starting_color()
@@ -32,6 +36,7 @@ def main():
                 if game.end_game():
                     break
     print("End reached")
+
 
 if __name__ == '__main__':
     main()
