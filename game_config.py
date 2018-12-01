@@ -1,30 +1,30 @@
 """
-                        Red Player
-                     , - ~ ~ ~ - ,
-                 , '               ' ,
-               ,                       ,
-              ,                         ,
-             ,                           ,
-Orange Player,                           , Blue Player
-             ,                           ,
-              ,                         ,
-               ,                       ,
-                 ,                  , '
-                   ' - , _ _ _ ,  '
-                        White Player
+                            Red Player
+                         , - ~ ~ ~ - ,
+                     , '               ' ,
+                   ,                       ,
+                  ,                         ,
+                 ,                           ,
+   Magenta Player,                           , Blue Player
+                 ,                           ,
+                  ,                         ,
+                   ,                       ,
+                     ,                  , '
+                       ' - , _ _ _ ,  '
+                            Yellow Player
 """
 
 PLAYERS_ORDER = {
     3: {
         'Red': 'Blue',
-        'Blue': 'White',
-        'White': 'Red'
+        'Blue': 'Yellow',
+        'Yellow': 'Red'
     },
     4: {
         'Red': 'Blue',
-        'Blue': 'White',
-        'White': 'Orange',
-        'Orange': 'Red'
+        'Blue': 'Yellow',
+        'Yellow': 'Magenta',
+        'Magenta': 'Red'
     }
 }
 
@@ -45,3 +45,10 @@ PLAYER_COLORS = 'default'
 
 MOCK_UP = [31, 32, 33, 35, 35, 38, 37, 41, 39, 44, 41, 68]
 FRIENDLY_ROBBER = True
+
+VIEW_CHARS = {
+    "available_sett": "*",
+    "owned_sett": "@",
+    "city": "Q",
+    "robber": "rbbr"
+}

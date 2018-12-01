@@ -101,6 +101,7 @@ class Board(object):
         tiles_id = anc[starting_point]
         for tile in tiles_id:
             if self.tiles[tile].resource is 'Desert':
+                self.tiles[tile].blocked = True
                 print("Tile #{} is a Desert".format(self.tiles[tile].tile_id))
                 continue
             self.tiles[tile].update_number(numbers[0])

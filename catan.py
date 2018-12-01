@@ -19,7 +19,7 @@ def main():
         board_map = json.load(json_data)
     board = Board(board_map)
     board.generate_new_board()
-    playing_colors = ['Red', 'Blue', 'White']
+    playing_colors = ['Red', 'Blue', 'Yellow']
     game = Game(playing_colors, board)
     game.determine_starting_color()
     game.seat_players()
