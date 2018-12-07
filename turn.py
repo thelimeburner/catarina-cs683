@@ -77,39 +77,49 @@ class Turn(object):
     def player_action(self):
         while True:
             choice = input("Player #{}, what would you like to do: ".format(self.current_player.color))
-            if choice == 'End_Turn':
+            if choice == "end":
                 break
-            else:
+            elif choice in globals.CONTROLS:
                 self.parse_action(choice)
+            else:
+                print("Wrong input. To end the turn type: End_Turn")
         return True
 
     def parse_action(self, choice):
-        if len(choice) is 3:
-            if choice[0] == 'R':
-                self.build_road(int(choice[1:]))
-            elif choice[0] == 'S':
-                if self.board.settelments[int(choice[1:])].owner is self.current_player:
-                    if not self.board.settelments[int(choice[1:])].city:
-                        self.upgrade_settelment(int(choice[1:]))
-                    else:
-                        print("Cannot upgrade. It is already a city")
-                        return
+        if choice.startswith("r"):
+            self.build_road(int(choice[1:]))
+        elif choice.startswith("s"):
+            if self.board.settelments[int(choice[1:])].owner is self.current_player:
+                if not self.board.settelments[int(choice[1:])].city:
+                    self.upgrade_settelment(int(choice[1:]))
                 else:
-                    self.build_settelment(int(choice[1:]))
-            elif choice[0] == 'D':
-                self.roll_dice(int(choice[1:]))
-        else:
-            if choice == 'Dice':
-                self.roll_dice()
-            elif choice == 'Knight':
-                for a in self.actions:
-                    if hasattr(a, 'knight'):
-                        if a.knight:
-                            print("Cannot use more than one development card per turn")
-                            return
-                self.place_robber(knight=True, friendly_robber=FRIENDLY_ROBBER)
-            elif choice == 'Undo':
-                self.undo()
+                    print("Cannot upgrade. It is already a city")
+                    return
+            else:
+                self.build_settelment(int(choice[1:]))
+        # temporary hack: enter "D" and the number you wish to score
+        elif choice.startswith("D"):
+            self.roll_dice(int(choice[1:]))
+        elif choice == 'dice':
+            self.roll_dice()
+        elif choice == 'knight':
+            for a in self.actions:
+                if hasattr(a, 'knight'):
+                    if a.knight:
+                        print("Cannot use more than one development card per turn")
+                        return
+            self.place_robber(knight=True, friendly_robber=FRIENDLY_ROBBER)
+        elif choice == 'undo':
+            self.undo()
+        # TODO
+        elif choice == "monopoly":
+            self.monopoly()
+        # TODO
+        elif choice == "build roads":
+            self.monopoly()
+        # TODO
+        elif choice == "plenty":
+            self.monopoly()
 
     def roll_dice(self, mock=None):
         if mock:
@@ -242,6 +252,18 @@ class Turn(object):
         if all(ok):
             return True
         return False
+
+    def monopoly(self):
+        # monopoly Development Card
+        pass
+
+    def build_roads(self):
+        # build roads Development Card
+        pass
+
+    def plenty(self):
+        # year of plenty Development Card
+        pass
 
     def count_longest_road(self):
         pass
