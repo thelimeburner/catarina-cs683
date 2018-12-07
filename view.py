@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from game_config import VIEW_CHARS
+import globals
 import collections
 import json
 import edge as e
@@ -10,8 +11,7 @@ def initialize_board():
     # import the asci board json
     with open('whole_asci_board.json', 'r') as fh:
         view_json = json.load(fh)
-    global BOARD_VIEW
-    BOARD_VIEW = view_json
+    globals.BOARD_VIEW = view_json
 
 
 def set_board_background():
@@ -19,7 +19,7 @@ def set_board_background():
     outline_keys = ["9", "8", "7"]
     ports = ["$"]
     units = []
-    for unit_id, idx in BOARD_VIEW["background"].items():
+    for unit_id, idx in globals.BOARD_VIEW["background"].items():
         for pixel in idx["coords"]:
             r = e.Shape(shape=idx["char"], x=pixel[0], y=pixel[1])
             if unit_id in outline_keys:
@@ -27,7 +27,7 @@ def set_board_background():
             elif unit_id in water_key:
                 r.set_color('blue')
             elif unit_id in ports:
-                r.set_color('magenta', color_attr='bold')
+                r.set_color('grey', highlights='on_cyan')
             else:
                 r.set_color('grey', highlights='on_cyan')
             units.append(r)
@@ -35,7 +35,7 @@ def set_board_background():
 
 
 def fixed_shape(board_unit, shape_type):
-    od = collections.OrderedDict(sorted(BOARD_VIEW[shape_type].items()))
+    od = collections.OrderedDict(sorted(globals.BOARD_VIEW[shape_type].items()))
     units = []
     for unit_id, idx in od.items():
         for pixel in idx["coords"]:
@@ -57,7 +57,7 @@ def fixed_shape(board_unit, shape_type):
 
 
 def text_in_shape(board_unit, shape_type):
-    unit_shape = BOARD_VIEW[shape_type]
+    unit_shape = globals.BOARD_VIEW[shape_type]
     units = []
     for tile in board_unit:
         if shape_type == "numbers":

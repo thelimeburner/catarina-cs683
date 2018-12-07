@@ -1,4 +1,11 @@
-from random import randint, randrange
+from random import randint, randrange, shuffle
+
+
+class DevelopmentCard(object):
+    def __init__(self, card_type):
+        self.card_type = card_type
+        self.owner = None
+        self.used = False
 
 
 class Tile(object):
@@ -67,6 +74,7 @@ class Board(object):
         self.dice = None
         self.tiles = []
         self.roads = []
+        self.dev_cards = []
         self.settelments = []
         self.longest_road = None
         self.largest_army = None
@@ -115,6 +123,7 @@ class Board(object):
         self._connect_roads()
         self._connect_settelments()
         self._connect_tiles()
+        self._stack_development_card()
         self._init_robber()
 
     def _connect_tiles(self):
@@ -149,6 +158,19 @@ class Board(object):
             for key_road, neighbour_settelments in self.board_map['roads_and_settelments'].items():
                 if int(key_road) is road.road_id:
                     road.neighbour_settelments = [self.settelments[idx] for idx in neighbour_settelments]
+
+    def _stack_development_card(self):
+        cards = {
+            "knight": 14,
+            "victory_point": 5,
+            "monopoly": 2,
+            "year_of_plenty": 2,
+            "build_roads": 2
+        }
+        for card, number in cards.items():
+            for _ in range(number):
+                self.dev_cards.append(DevelopmentCard(card_type=card))
+        shuffle(self.dev_cards)
 
     def _init_robber(self):
         for t in self.tiles:

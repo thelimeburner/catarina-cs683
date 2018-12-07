@@ -1,4 +1,5 @@
 from game_config import FRIENDLY_ROBBER, MOCK_UP
+import globals
 import actions
 
 from random import randint
