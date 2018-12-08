@@ -5,7 +5,10 @@ class DevelopmentCard(object):
     def __init__(self, card_type):
         self.card_type = card_type
         self.owner = None
-        self.used = False
+        self.already_used = False
+
+    def used(self):
+        self.already_used = True
 
 
 class Tile(object):

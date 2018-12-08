@@ -81,7 +81,6 @@ class Game(object):
             whole_graph.update(self._connected_road(road))
         G = nx.Graph()
         sub_graphs = nx.connected_component_subgraphs(G)
-        print("J")
 
     def _return_nodes(self):
         pass

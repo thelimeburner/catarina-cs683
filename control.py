@@ -3,6 +3,7 @@ GAME_CONTROLS = [
     "dice",
     "end",
     "undo",
+    "buy dc",
     "knight",
     "monopoly",
     "build roads",
@@ -13,6 +14,24 @@ GAME_CONTROLS = [
 def sort_them(controllers, letter):
     current_list = [s for s in controllers]
     return [str(letter + str(s)) for s in sorted(current_list, key=int)]
+
+
+def get_roads_controllers(board_map):
+    roads = []
+    roads.extend(sort_them(board_map["roads_and_settelments"], "r"))
+    return roads
+
+
+def get_setts_controllers(board_map):
+    setts = []
+    setts.extend(sort_them(board_map["neighbour_settelments"], "s"))
+    return setts
+
+
+def get_tiles_controllers(board_map):
+    tiles = []
+    tiles.extend(sort_them(board_map["tiles_and_settelments"], "t"))
+    return tiles
 
 
 # Controllers representation

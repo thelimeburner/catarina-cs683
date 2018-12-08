@@ -10,5 +10,6 @@ class Player(object):
         self.settlements = 5
         self.cities_built = []
         self.cities = 4
+        self.dev_cards = []
         self.knights = 0
         self.points = 0

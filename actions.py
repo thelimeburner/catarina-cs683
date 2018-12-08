@@ -1,4 +1,4 @@
-from random import randint
+from random import shuffle
 
 
 class Action(object):
@@ -137,6 +137,66 @@ class PlaceRobberAction(Action):
                     self.board.tiles[self.board.previous_blocked].resource))
                 if knight:
                     self.current_player.knights -= 1
+                return True
+
+        super().__init__(do, undo)
+
+
+class BuyDCAction(Action):
+    def __init__(self, board, player):
+        self.done = False
+        self.board = board
+        self.current_player = player
+        self.card = self.board.dev_cards[0]
+
+        def do():
+            self.current_player.dev_cards.append(self.card)
+            self.board.dev_cards.remove(self.card)
+            print("Player #{} bought a Development Card and it's {}".format(
+                self.current_player.color,
+                self.card.card_type)
+            )
+            self.done = True
+            return True
+
+        def undo():
+            if self.done:
+                self.card = self.current_player.dev_cards[len(self.current_player.dev_cards)-1]
+                self.board.dev_cards.append(self.card)
+                self.current_player.dev_cards.remove(self.card)
+                shuffle(self.board.dev_cards)
+                return True
+
+        super().__init__(do, undo)
+
+
+class BuildRoadsDCAction(Action):
+    def __init__(self, board, player, step):
+        self.done = False
+        self.board = board
+        self.current_player = player
+        self.step = step
+        self.card_type = "build_roads"
+
+        def do():
+            if self.step == 1:
+                self.done = True
+                return True
+            for card in self.current_player.dev_cards:
+                if card.card_type == self.card_type and card.already_used is False:
+                    print("DEBUG: marked card as used")
+                    card.used()
+                    break
+            self.done = True
+            return True
+
+        def undo():
+            if self.done:
+                for card in self.current_player.dev_cards:
+                    if card.card_type == self.card_type and card.already_used is True:
+                        print("DEBUG: undo - marked card as unused")
+                        card.already_used = False
+                        break
                 return True
 
         super().__init__(do, undo)
