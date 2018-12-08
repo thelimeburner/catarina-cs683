@@ -32,7 +32,7 @@ class Game(object):
         self.first_player = self.players[0]
 
     def player_turn(self, pregame=False):
-        print("Current turn: Player #{}".format(self.current_player.color))
+        print("Current turn: {} player".format(self.current_player.color.capitalize()))
         self.turn = Turn(self.board, self.current_player)
         done = False
         while not done:
@@ -61,7 +61,7 @@ class Game(object):
         return True
 
     def end_game(self):
-        print("The winner is: Player #{} with {} victory points".format(self.winner.color, self.winner.points))
+        print("The winner is: {} with {} victory points".format(self.winner.color.capitalize(), self.winner.points))
         return True
 
     def count_largest_army(self):

@@ -21,13 +21,13 @@ class Turn(object):
         while not built_sett:
             if mock_up:
                 choice_sett = MOCK_UP[0]
-                print("Player #{}, where would you like to place a settelment: {}".format(
-                    self.current_player.color, MOCK_UP[0]))
+                print("{}, where would you like to place a settelment: {}".format(
+                    self.current_player.color.capitalize(), MOCK_UP[0]))
                 del MOCK_UP[0]
                 if self.build_settelment(choice_sett, first=True):
                     break
-            choice_sett = int(input("Player #{}, where would you like to place a settelment: ".format(
-                self.current_player.color)))
+            choice_sett = int(input("{}, where would you like to place a settelment: ".format(
+                self.current_player.color.capitalize())))
             if choice_sett not in list(range(0, 54)):
                 if choice_sett == 666:
                     if len(self.actions) > 0:
@@ -42,13 +42,13 @@ class Turn(object):
         while not built_road:
             if mock_up:
                 choice_road = MOCK_UP[0]
-                print("Player #{}, where would you like to place a road: {}".format(
-                    self.current_player.color, MOCK_UP[0]))
+                print("{}, where would you like to place a road: {}".format(
+                    self.current_player.color.capitalize(), MOCK_UP[0]))
                 del MOCK_UP[0]
                 if self.build_road(choice_road, choice_sett):
                     break
-            choice_road = int(input("Player #{}, where would you like to place a road: ".format(
-                self.current_player.color)))
+            choice_road = int(input("{}, where would you like to place a road: ".format(
+                self.current_player.color.capitalize())))
             if choice_road not in list(range(0, 72)):
                 if choice_road == 666:
                     if len(self.actions) > 0:
@@ -64,8 +64,8 @@ class Turn(object):
         while not done_turn:
             if mock_up:
                 break
-            choice_end = int(input("Player #{}, end the turn or undo (777 = end, 666 = undo) ".format(
-                self.current_player.color)))
+            choice_end = int(input("{}, end the turn or undo (777 = end, 666 = undo) ".format(
+                self.current_player.color.capitalize())))
             if choice_end == 777:
                 done_turn = True
             elif choice_end == 666:
@@ -76,7 +76,7 @@ class Turn(object):
 
     def player_action(self):
         while True:
-            choice = input("Player #{}, what would you like to do: ".format(self.current_player.color))
+            choice = input("{}, what would you like to do: ".format(self.current_player.color.capitalize()))
             if choice == "end":
                 break
             elif choice in globals.CONTROLS:
@@ -123,7 +123,7 @@ class Turn(object):
                 print("Cannot use more than one development card per turn")
                 return
             if not self.verify_player_holds_dc("build_roads"):
-                print("Player #{} doesn't hold Build Road card".format(self.current_player.color))
+                print("{} doesn't hold Build Road card".format(self.current_player.color.capitalize()))
                 return
             else:
                 self.build_roads()
@@ -151,8 +151,8 @@ class Turn(object):
                 if not t.blocked:
                     for s in t.buildings:
                         if s.owner is not None:
-                            print("Player #{player} has gained {cards} {resource} from settelment {sett}".format(
-                                player=s.owner.color,
+                            print("{player} has gained {cards} {resource} from settelment {sett}".format(
+                                player=s.owner.color.capitalize(),
                                 cards=2 if s.city else 1,
                                 resource=t.resource,
                                 sett=s.settelment_id
@@ -196,7 +196,7 @@ class Turn(object):
                     print("Spot not available!")
                     return False
         else:
-            raise Exception("Player {} has no roads left to build".format(self.current_player.color))
+            raise Exception("{} has no roads left to build".format(self.current_player.color.capitalize()))
         action = actions.BuildRoadAction(self.board, self.current_player, road)
         self.actions.append(action)
         action.do()
@@ -309,7 +309,7 @@ class Turn(object):
                 self.actions.append(action)
                 if action.do():
                     pass
-                choice = input("Player #{}, what road would you like to build: ".format(self.current_player.color))
+                choice = input("{}, what road would you like to build: ".format(self.current_player.color.capitalize()))
                 if choice == "end":
                     self.undo()
                     break

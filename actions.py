@@ -18,7 +18,7 @@ class BuildRoadAction(Action):
             road.available = False
             player.roads_built.append(road)
             player.roads -= 1
-            print("Player #{} has built road {}".format(player.color, road.road_id))
+            print("{} has built road {}".format(player.color.capitalize(), road.road_id))
             self.done = True
             return True
 
@@ -28,7 +28,7 @@ class BuildRoadAction(Action):
                 road.available = True
                 player.roads_built.remove(road)
                 player.roads += 1
-                print("Player #{} undid the road {}".format(player.color, road.road_id))
+                print("{} undid the road {}".format(player.color.capitalize(), road.road_id))
                 return True
 
         super().__init__(do, undo)
@@ -49,7 +49,7 @@ class BuildSettelmentAction(Action):
             self.current_player.points += 1
             self.current_player.settlements -= 1
             self.done = True
-            print("Player #{} built a settelment on {}".format(self.current_player.color, sett.settelment_id))
+            print("{} built a settelment on {}".format(self.current_player.color.capitalize(), sett.settelment_id))
             return True
 
         def undo():
@@ -61,7 +61,7 @@ class BuildSettelmentAction(Action):
                     s.available = True
                 self.current_player.points -= 1
                 self.current_player.settlements += 1
-                print("Player #{} undid the settelment on {}".format(self.current_player.color, sett.settelment_id))
+                print("{} undid the settelment on {}".format(self.current_player.color.capitalize(), sett.settelment_id))
                 return True
             return False
 
@@ -83,7 +83,7 @@ class BuildCityAction(Action):
             sett.settelment = False
             sett.city = True
             self.done = True
-            print("Player #{} built a city on {}".format(self.current_player.color, sett.settelment_id))
+            print("{} built a city on {}".format(self.current_player.color.capitalize(), sett.settelment_id))
             return True
 
         def undo():
@@ -95,7 +95,7 @@ class BuildCityAction(Action):
                 self.current_player.settlements -= 1
                 sett.settelment = True
                 sett.city = False
-                print("Player #{} undid the city on {}".format(self.current_player.color, sett.settelment_id))
+                print("{} undid the city on {}".format(self.current_player.color.capitalize(), sett.settelment_id))
                 return True
 
         super().__init__(do, undo)
@@ -113,8 +113,8 @@ class PlaceRobberAction(Action):
             self.board.previous_blocked = self.board.current_blocked
             self.board.tiles[tile_id].blocked = True
             self.board.current_blocked = tile_id
-            print("Player #{} placed the robber on tile {}: The number {} and resource {}".format(
-                self.current_player.color,
+            print("{} placed the robber on tile {}: The number {} and resource {}".format(
+                self.current_player.color.capitalize(),
                 self.board.tiles[tile_id].tile_id,
                 self.board.tiles[tile_id].number,
                 self.board.tiles[tile_id].resource))
@@ -129,8 +129,8 @@ class PlaceRobberAction(Action):
                     self.board.tiles[self.board.previous_blocked].blocked = True
                 self.board.current_blocked = self.board.previous_blocked
                 self.board.tiles[tile_id].blocked = False
-                print("Player #{} undid the robber on tile {}".format(
-                    self.current_player.color, self.board.tiles[tile_id].tile_id))
+                print("{} undid the robber on tile {}".format(
+                    self.current_player.color.capitalize(), self.board.tiles[tile_id].tile_id))
                 print("Robber moved back to tile {}: The number {} and resource {}".format(
                     self.board.tiles[self.board.previous_blocked].tile_id,
                     self.board.tiles[self.board.previous_blocked].number,
@@ -152,8 +152,8 @@ class BuyDCAction(Action):
         def do():
             self.current_player.dev_cards.append(self.card)
             self.board.dev_cards.remove(self.card)
-            print("Player #{} bought a Development Card and it's {}".format(
-                self.current_player.color,
+            print("{} bought a Development Card and it's {}".format(
+                self.current_player.color.capitalize(),
                 self.card.card_type)
             )
             self.done = True
