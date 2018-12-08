@@ -10,6 +10,13 @@ class Player(object):
         self.settlements = 5
         self.cities_built = []
         self.cities = 4
+        self.resource_cards = {
+            "brick": 0,
+            "wood": 0,
+            "grain": 0,
+            "sheep": 0,
+            "ore": 0
+        }
         self.dev_cards = []
         self.knights = 0
         self.points = 0

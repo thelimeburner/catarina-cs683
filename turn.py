@@ -157,6 +157,8 @@ class Turn(object):
                                 resource=t.resource,
                                 sett=s.settelment_id
                             ))
+                            self.board.cards_deck.give(t.resource.lower(), 2 if s.city else 1)
+                            s.owner.resource_cards[t.resource.lower()] += 2 if s.city else 1
 
     def buy_dc(self):
         # buy Development Card

@@ -11,6 +11,23 @@ class DevelopmentCard(object):
         self.already_used = True
 
 
+class ResourceDeck(object):
+    def __init__(self):
+        self.deck = {
+            "brick": 19,
+            "wood": 19,
+            "grain": 19,
+            "sheep": 19,
+            "ore": 19
+        }
+
+    def accept(self, card, number_of_cards=1):
+        self.deck[card] += number_of_cards
+
+    def give(self, card, number_of_cards=1):
+        self.deck[card] -= number_of_cards
+
+
 class Tile(object):
     def __init__(self, tile_id, resource):
         self.tile_id = tile_id
@@ -77,6 +94,7 @@ class Board(object):
         self.dice = None
         self.tiles = []
         self.roads = []
+        self.cards_deck = None
         self.dev_cards = []
         self.settelments = []
         self.longest_road = None
@@ -87,7 +105,7 @@ class Board(object):
     def generate_new_board(self):
         resources = [
             'Brick', 'Brick', 'Brick', 'Desert', 'Ore', 'Ore', 'Ore', 'Sheep', 'Sheep', 'Sheep',
-            'Sheep', 'Wheat', 'Wheat', 'Wheat', 'Wheat', 'Wood', 'Wood', 'Wood', 'Wood'
+            'Sheep', 'Grain', 'Grain', 'Grain', 'Grain', 'Wood', 'Wood', 'Wood', 'Wood'
         ]
         numbers = [5, 2, 6, 3, 8, 10, 9, 12, 11, 4, 8, 10, 9, 4, 5, 6, 3, 11]
 
@@ -123,6 +141,7 @@ class Board(object):
             self.roads.append(Road(road_id))
         for settelment_id in range(0, 54):
             self.settelments.append(Settelment(settelment_id))
+        self.cards_deck = ResourceDeck()
         self._connect_roads()
         self._connect_settelments()
         self._connect_tiles()
