@@ -25,7 +25,13 @@ class ResourceDeck(object):
         self.deck[card] += number_of_cards
 
     def give(self, card, number_of_cards=1):
-        self.deck[card] -= number_of_cards
+        if self.deck[card] - number_of_cards >= 0:
+            self.deck[card] -= number_of_cards
+            return number_of_cards
+        else:
+            leftovers = self.deck[card]
+            self.deck[card] -= self.deck[card]
+            return leftovers
 
 
 class Tile(object):

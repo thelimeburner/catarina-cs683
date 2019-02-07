@@ -20,6 +20,7 @@ def main():
         board_map = json.load(json_data)
     # initialize controllers
     globals.CONTROLS = control.get_all_controllers(board_map)
+    globals.HACKS = ("dice=", "end=")
     globals.SPECIFIC_CONTROLS = {
         "roads": control.get_roads_controllers(board_map),
         "setts": control.get_setts_controllers(board_map),

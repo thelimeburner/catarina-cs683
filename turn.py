@@ -79,7 +79,7 @@ class Turn(object):
             choice = input("{}, what would you like to do: ".format(self.current_player.color.capitalize()))
             if choice == "end":
                 break
-            elif choice in globals.CONTROLS:
+            elif choice in globals.CONTROLS or choice.startswith(globals.HACKS):
                 self.parse_action(choice)
             else:
                 print("Wrong input. To end the turn type: End_Turn")
@@ -102,6 +102,8 @@ class Turn(object):
             self.roll_dice(int(choice[1:]))
         elif choice == 'dice':
             self.roll_dice()
+        elif choice.startswith('dice='):
+            self.roll_dice(mock=choice[5:])
         elif choice == 'buy dc':
             self.buy_dc()
         elif choice == 'knight':
@@ -133,7 +135,7 @@ class Turn(object):
 
     def roll_dice(self, mock=None):
         if mock:
-            self.board.dice = mock
+            self.board.dice = int(mock)
         else:
             if self.board.dice:
                 print("Cannot roll dice more than once")
@@ -145,19 +147,21 @@ class Turn(object):
         else:
             self.check_profits()
 
+    #TODO Gather profits by the players sitting order
     def check_profits(self):
         for t in self.board.tiles:
             if self.board.dice is t.number:
                 if not t.blocked:
                     for s in t.buildings:
                         if s.owner is not None:
+                            cards = 2 if s.city else 1
                             print("{player} has gained {cards} {resource} from settelment {sett}".format(
                                 player=s.owner.color.capitalize(),
                                 cards=2 if s.city else 1,
                                 resource=t.resource,
                                 sett=s.settelment_id
                             ))
-                            self.board.cards_deck.give(t.resource.lower(), 2 if s.city else 1)
+                            cards = self.board.cards_deck.give(t.resource.lower(), 2 if s.city else 1)
                             s.owner.resource_cards[t.resource.lower()] += 2 if s.city else 1
 
     def buy_dc(self):
@@ -255,7 +259,7 @@ class Turn(object):
 
     def place_robber(self, knight=False, friendly_robber=False):
         while True:
-            tile_id = int(input("Which tile would you like to block: "))
+            tile_id = int(input("Which tile would you like to block (0-19): "))
             if tile_id not in list(range(0, 19)):
                 print("Invalid tile number")
             else:

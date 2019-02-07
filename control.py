@@ -8,6 +8,7 @@ GAME_CONTROLS = [
     "monopoly",
     "build roads",
     "plenty"
+
 ]
 
 
