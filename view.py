@@ -25,11 +25,11 @@ def set_board_background():
             if unit_id in outline_keys:
                 pass
             elif unit_id in water_key:
-                r.set_color('blue')
+                r.set_color('cyan', highlights='on_blue')
             elif unit_id in ports:
                 r.set_color('grey', highlights='on_cyan')
             else:
-                r.set_color('grey', highlights='on_cyan')
+                r.set_color('grey', highlights='on_blue')
             units.append(r)
     return units
 
@@ -46,15 +46,21 @@ def fixed_shape(board_unit, shape_type):
             if unit.owner:
                 color = unit.owner.color
                 if shape_type == 'roads':
-                    r.set_color('grey', highlights='on_{}'.format(color.lower()), color_attr='bold')
+                    r.set_color(color.lower(), highlights='on_{}'.format(color.lower()), color_attr='bold')
                 if shape_type == 'settlements':
                     r.set_shape(VIEW_CHARS["owned_sett"])
                     if unit.city:
                         r.set_shape(VIEW_CHARS["city"])
-                    r.set_color(color.lower(), color_attr='bold')
+                    r.set_color(color.lower(), highlights='on_{}'.format(color.lower()), color_attr='bold')
             units.append(r)
     return units
 
+resource_colors = {'grain':  'yellow',
+                   'sheep':  'green',
+                   'ore':    'grey',
+                   'wood':   'magenta',
+                   'brick':  'red',
+                   'desert': 'white'}
 
 def text_in_shape(board_unit, shape_type):
     unit_shape = globals.BOARD_VIEW[shape_type]
@@ -73,7 +79,11 @@ def text_in_shape(board_unit, shape_type):
                 x = unit_shape[str(tile.tile_id)]["coords"][idx][0]
                 y = unit_shape[str(tile.tile_id)]["coords"][idx][1]
                 u = e.Shape(shape=char, x=x, y=y)
-                u.set_color('white', color_attr='bold')
+                highlights='on_{}'.format(resource_colors[txt_shape.lower()])
+                color = 'white'
+                if highlights[3:] == 'white':
+                    color = 'grey'
+                u.set_color(color, highlights=highlights, color_attr='bold')
                 units.append(u)
         if shape_type == "robbers":
             txt_shape = VIEW_CHARS["robber"]
