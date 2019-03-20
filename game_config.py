@@ -44,7 +44,7 @@ Player colors options:
 PLAYER_COLORS = 'default'
 
 MOCK_UP = [31, 32, 33, 35, 35, 38, 37, 41, 39, 44, 41, 68]
-FRIENDLY_ROBBER = True
+FRIENDLY_ROBBER = False
 
 VIEW_CHARS = {
     "available_sett": "*",

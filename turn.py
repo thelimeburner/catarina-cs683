@@ -24,7 +24,7 @@ class Turn(object):
                 print("{}, where would you like to place a settelment: {}".format(
                     self.current_player.color.capitalize(), MOCK_UP[0]))
                 del MOCK_UP[0]
-                if self.build_settelment(choice_sett, first=True):
+                if self.build_settelment(choice_sett, first=True, pay=False):
                     break
             choice_sett = int(input("{}, where would you like to place a settelment: ".format(
                 self.current_player.color.capitalize())))
@@ -37,7 +37,7 @@ class Turn(object):
                         print("Nothing to Undo")
                 print("Invalid input, try again")
             else:
-                if self.build_settelment(choice_sett, first=True):
+                if self.build_settelment(choice_sett, first=True, pay=False):
                     built_sett = True
         while not built_road:
             if mock_up:
@@ -45,7 +45,7 @@ class Turn(object):
                 print("{}, where would you like to place a road: {}".format(
                     self.current_player.color.capitalize(), MOCK_UP[0]))
                 del MOCK_UP[0]
-                if self.build_road(choice_road, choice_sett):
+                if self.build_road(choice_road, choice_sett, pay=False):
                     break
             choice_road = int(input("{}, where would you like to place a road: ".format(
                 self.current_player.color.capitalize())))
@@ -59,7 +59,7 @@ class Turn(object):
                         print("Nothing to Undo")
                 print("Invalid input, try again")
             else:
-                if self.build_road(choice_road, choice_sett):
+                if self.build_road(choice_road, choice_sett, pay=False):
                     built_road = True
         while not done_turn:
             if mock_up:
@@ -76,7 +76,17 @@ class Turn(object):
 
     def player_action(self):
         while True:
-            choice = input("{}, what would you like to do: ".format(self.current_player.color.capitalize()))
+            current = self.current_player
+            resources = ', '.join(['{}*{}'.format(c, r) for r, c in current.resource_cards.items() if c])
+            if resources:
+                print("{}'s resources: {}".format(current.color.capitalize(), resources))
+            else:
+                print("{} has no resources right now".format(current.color.capitalize()))
+            dev_strs = [x.card_type for x in current.dev_cards]
+            dev_cards = ', '.join(['{}*{}'.format(dev_strs.count(x), x.replace('_', ' ')) for x in set(dev_strs)])
+            if dev_cards:
+                print("{}'s development cards: {}".format(current.color.capitalize(), dev_cards))
+            choice = input("{}, what would you like to do: ".format(current.color.capitalize()))
             if choice == "end":
                 break
             elif choice in globals.CONTROLS or choice.startswith(globals.HACKS):
@@ -164,13 +174,14 @@ class Turn(object):
                             cards = self.board.cards_deck.give(t.resource.lower(), 2 if s.city else 1)
                             s.owner.resource_cards[t.resource.lower()] += 2 if s.city else 1
 
-    def buy_dc(self):
+    def buy_dc(self, pay=True):
         # buy Development Card
         if len(self.board.dev_cards) > 0:
-            action = actions.BuyDCAction(self.board, self.current_player)
-            self.actions.append(action)
-            action.do()
-            return True
+            action = actions.BuyDCAction(self.board, self.current_player, pay=pay)
+            if action.do():
+                self.actions.append(action)
+                return True
+            return False
         else:
             print("No Development Cards left in deck")
 
@@ -190,7 +201,7 @@ class Turn(object):
                 return True
         return False
 
-    def build_road(self, road_id, sett=None):
+    def build_road(self, road_id, sett=None, pay=True):
         road = self.board.roads[road_id]
         if self.current_player.roads > 0:
             if sett:
@@ -203,10 +214,11 @@ class Turn(object):
                     return False
         else:
             raise Exception("{} has no roads left to build".format(self.current_player.color.capitalize()))
-        action = actions.BuildRoadAction(self.board, self.current_player, road)
-        self.actions.append(action)
-        action.do()
-        return True
+        action = actions.BuildRoadAction(self.board, self.current_player, road, pay=pay)
+        if action.do():
+            self.actions.append(action)
+            return True
+        return False
 
     def road_spot_available(self, road, pregame_sett=None):
         if road.available:
@@ -227,15 +239,16 @@ class Turn(object):
                                 return True
         return False
 
-    def build_settelment(self, sett_id, first=False):
+    def build_settelment(self, sett_id, first=False, pay=True):
         sett = self.board.settelments[sett_id]
         if not self.sett_spot_available(sett, first):
             print("Cannot build on a settelment on", sett_id)
             return False
-        action = actions.BuildSettelmentAction(self.board, self.current_player, sett)
-        self.actions.append(action)
+        action = actions.BuildSettelmentAction(self.board, self.current_player, sett, pay=pay)
         if action.do():
+            self.actions.append(action)
             return True
+        return False
 
     def sett_spot_available(self, sett, first):
         if sett.available:
@@ -247,19 +260,21 @@ class Turn(object):
                         return True
         return False
 
-    def upgrade_settelment(self, settelment_id):
+    def upgrade_settelment(self, settelment_id, pay=True):
         sett = self.board.settelments[settelment_id]
         if sett.owner is not self.current_player:
             print("Cannot build on a city on", sett.settelment_id)
             return False
-        action = actions.BuildCityAction(self.board, self.current_player, sett)
+        action = actions.BuildCityAction(self.board, self.current_player, sett, pay=pay)
         self.actions.append(action)
         if action.do():
+            self.actions.append(action)
             return True
+        return False
 
     def place_robber(self, knight=False, friendly_robber=False):
         while True:
-            tile_id = int(input("Which tile would you like to block (0-19): "))
+            tile_id = int(input("Which tile would you like to block (0-18): "))
             if tile_id not in list(range(0, 19)):
                 print("Invalid tile number")
             else:
@@ -320,7 +335,7 @@ class Turn(object):
                     self.undo()
                     break
                 elif choice in globals.SPECIFIC_CONTROLS["roads"]:
-                    if self.build_road(int(choice[1:])):
+                    if self.build_road(int(choice[1:]), pay=False):
                         roads_built += 1
                         break
                 else:
@@ -341,4 +356,3 @@ class Turn(object):
 
     def count_longest_road(self):
         pass
-
