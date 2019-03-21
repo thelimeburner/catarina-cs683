@@ -1,14 +1,14 @@
 
 GAME_CONTROLS = [
-    "dice",
+    #"dice",
     "end",
     "undo",
-    "buy dc",
-    "knight",
-    "monopoly",
-    "build roads",
-    "plenty",
-    "help"
+    #"buy dc",
+    #"knight",
+    #"monopoly",
+    #"build roads",
+    #"plenty",
+    #"help"
 ]
 
 

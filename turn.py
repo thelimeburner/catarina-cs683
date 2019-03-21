@@ -1,6 +1,7 @@
 from game_config import FRIENDLY_ROBBER, MOCK_UP
 import globals
 import actions
+from random import randrange
 
 from random import randint
 
@@ -19,17 +20,26 @@ class Turn(object):
         built_road = False
         done_turn = False
         while not built_sett:
-            if mock_up:
+            if mock_up == 'random':
+                choice_sett = randrange(54)
+                while not self.build_settelment(choice_sett, first=True, pay=False, silent=True):
+                    choice_sett = randrange(54)
+                break
+            elif mock_up:
                 choice_sett = MOCK_UP[0]
                 print("{}, where would you like to place a settelment: {}".format(
                     self.current_player.color.capitalize(), MOCK_UP[0]))
                 del MOCK_UP[0]
                 if self.build_settelment(choice_sett, first=True, pay=False):
                     break
-            choice_sett = int(input("{}, where would you like to place a settelment: ".format(
-                self.current_player.color.capitalize())))
+            choice_sett = input("{}, where would you like to place a settelment: ".format(
+                self.current_player.color.capitalize()))
+            try:
+                choice_sett = int(choice_sett)
+            except ValueError:
+                pass
             if choice_sett not in list(range(0, 54)):
-                if choice_sett == 666:
+                if choice_sett == 'undo':
                     if len(self.actions) > 0:
                         self.undo()
                         return False
@@ -40,17 +50,26 @@ class Turn(object):
                 if self.build_settelment(choice_sett, first=True, pay=False):
                     built_sett = True
         while not built_road:
-            if mock_up:
+            if mock_up == 'random':
+                choice_road = randrange(72)
+                while not self.build_road(choice_road, choice_sett, pay=False, silent=True):
+                    choice_road = randrange(72)
+                break
+            elif mock_up:
                 choice_road = MOCK_UP[0]
                 print("{}, where would you like to place a road: {}".format(
                     self.current_player.color.capitalize(), MOCK_UP[0]))
                 del MOCK_UP[0]
                 if self.build_road(choice_road, choice_sett, pay=False):
                     break
-            choice_road = int(input("{}, where would you like to place a road: ".format(
-                self.current_player.color.capitalize())))
+            choice_road = input("{}, where would you like to place a road: ".format(
+                self.current_player.color.capitalize()))
+            try:
+                choice_road = int(choice_road)
+            except ValueError:
+                pass
             if choice_road not in list(range(0, 72)):
-                if choice_road == 666:
+                if choice_road == 'undo':
                     if len(self.actions) > 0:
                         self.undo()
                         self.undo()
@@ -64,11 +83,11 @@ class Turn(object):
         while not done_turn:
             if mock_up:
                 break
-            choice_end = int(input("{}, end the turn or undo (777 = end, 666 = undo) ".format(
-                self.current_player.color.capitalize())))
-            if choice_end == 777:
+            choice_end = input("{}, end the turn or undo ('end' or 'undo') ".format(
+                self.current_player.color.capitalize()))
+            if choice_end == 'end':
                 done_turn = True
-            elif choice_end == 666:
+            elif choice_end == 'undo':
                 self.undo()
                 self.undo()
                 return False
@@ -201,16 +220,18 @@ class Turn(object):
                 return True
         return False
 
-    def build_road(self, road_id, sett=None, pay=True):
+    def build_road(self, road_id, sett=None, pay=True, silent=False):
         road = self.board.roads[road_id]
         if self.current_player.roads > 0:
             if sett:
                 if not self.road_spot_available(road, self.board.settelments[sett]):
-                    print("Spot not available!")
+                    if not silent:
+                        print("Spot not available!")
                     return False
             else:
                 if not self.road_spot_available(road):
-                    print("Spot not available!")
+                    if not silent:
+                        print("Spot not available!")
                     return False
         else:
             raise Exception("{} has no roads left to build".format(self.current_player.color.capitalize()))
@@ -239,10 +260,11 @@ class Turn(object):
                                 return True
         return False
 
-    def build_settelment(self, sett_id, first=False, pay=True):
+    def build_settelment(self, sett_id, first=False, pay=True, silent=False):
         sett = self.board.settelments[sett_id]
         if not self.sett_spot_available(sett, first):
-            print("Cannot build on a settelment on", sett_id)
+            if not silent:
+                print("Cannot build on a settelment on", sett_id)
             return False
         action = actions.BuildSettelmentAction(self.board, self.current_player, sett, pay=pay)
         if action.do():

@@ -37,7 +37,7 @@ class Game(object):
         done = False
         while not done:
             if pregame:
-                    if self.turn.pregame_player_action(mock_up=True):
+                    if self.turn.pregame_player_action(mock_up=MOCK_UP):
                         done = self.end_pregame_turn()
             else:
                     if self.turn.player_action():
