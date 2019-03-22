@@ -18,6 +18,8 @@ class Game(object):
         self.turn = None
         self.winner = None
 
+        self.turn_history = []
+
     def determine_starting_color(self):
         first_color = randint(0, len(self.playing_colors) - 1)
         self.first_player = self.playing_colors[first_color]
@@ -32,16 +34,17 @@ class Game(object):
         self.first_player = self.players[0]
 
     def player_turn(self, pregame=False):
-        print("Current turn: {} player".format(self.current_player.color.capitalize()))
+        self.current_player.announce("Current turn: {} player".format(self.current_player.color.capitalize()))
         self.turn = Turn(self.board, self.current_player)
+        self.turn_history.append(self.turn)
         done = False
         while not done:
             if pregame:
-                    if self.turn.pregame_player_action(mock_up=MOCK_UP):
-                        done = self.end_pregame_turn()
+                if self.turn.pregame_player_action(mock_up=MOCK_UP):
+                    done = self.end_pregame_turn()
             else:
-                    if self.turn.player_action():
-                        done = self.end_turn()
+                if self.turn.player_action():
+                    done = self.end_turn()
         return done
 
     def end_pregame_turn(self):
@@ -59,6 +62,19 @@ class Game(object):
         self.current_player = self.current_player.next_player
         view.update_view(self.board)
         return True
+
+    def revert_turn(self, turn=None):
+        if turn == None:
+            return self.revert_turn(len(self.turn_history) - 1)
+        while len(self.turn_history) > turn:
+            self.turn_history[-1].undo_turn()
+            self.turn_history = self.turn_history[:-1]
+        if self.turn_history:
+            self.current_player = self.turn_history[-1].current_player
+        else:
+            self.current_player = self.first_player
+        self.board.dice = None
+
 
     def end_game(self):
         print("The winner is: {} with {} victory points".format(self.winner.color.capitalize(), self.winner.points))

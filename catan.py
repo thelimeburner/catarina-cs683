@@ -8,7 +8,6 @@ import view
 import logging
 import json
 
-
 def main():
     logging.basicConfig(format="%(asctime)s.%(msecs)03d %(levelname)s>  %(message)s",
                         datefmt="%Y/%m/%d %H:%M:%S",

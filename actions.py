@@ -1,10 +1,68 @@
-from random import shuffle
-
+from random import shuffle, randint
 
 class Action(object):
     def __init__(self, do=lambda: True, undo=lambda: True):
         self.do = do
         self.undo = undo
+
+class RollAction(Action):
+    def __init__(self, board, player, roll=None):
+        self.board = board
+        self.player = player
+        self.roll = roll
+        if not roll or roll not in list(range(2, 12)):
+            self.roll = randint(1, 6) + randint(1, 6)
+        self.robber_action = None
+        self.cards_gained = {}
+
+        def do():
+            self.board.dice = self.roll
+            self.player.announce('Dice: {}'.format(self.roll))
+            if self.board.dice == 7:
+                while True:
+                    tile_id = self.player.choose_robber_placement()
+                    if tile_id is self.board.current_blocked:
+                        self.player.announce("The robber cannot remain on the same tile")
+                    else:
+                        break
+                action = PlaceRobberAction(self.board, self.current_player, tile_id)
+                if action.do():
+                    self.robber_action = action
+                return True
+            else:
+                for t in self.board.tiles:
+                    if self.board.dice is t.number and not t.blocked:
+                        for s in t.buildings:
+                            if s.owner is not None:
+                                cards = 2 if s.city else 1
+                                self.player.announce("{player} has gained {cards} {resource} from settelment {sett}".format(
+                                    player=s.owner.color.capitalize(),
+                                    cards=2 if s.city else 1,
+                                    resource=t.resource,
+                                    sett=s.settelment_id
+                                ))
+                                cards = self.board.cards_deck.give(t.resource.lower(), 2 if s.city else 1)
+                                self.cards_gained[s.owner] = self.cards_gained.get(s.owner, {
+                                    "brick": 0,
+                                    "wood": 0,
+                                    "grain": 0,
+                                    "sheep": 0,
+                                    "ore": 0
+                                })
+                                self.cards_gained[s.owner][t.resource.lower()] += cards
+                                s.owner.resource_cards[t.resource.lower()] += cards
+                return True
+
+        def undo():
+            if self.robber_action:
+                return self.robber_action.undo()
+            for player, resources in self.cards_gained.items():
+                for resource in resources:
+                    s.owner.resource_cards[resource] -= resources[resource]
+                    self.board.cards_deck.accept(resource, resources[resource])
+            return True
+
+        super().__init__(do, undo)
 
 class PayAction(Action):
     costs = {'development card': {'sheep': 1, 'ore': 1, 'grain': 1},
@@ -12,10 +70,11 @@ class PayAction(Action):
              'city':             {'grain': 2, 'ore': 3},
              'road':             {'brick': 1, 'wood': 1}}
 
-    def __init__(self, item, player):
+    def __init__(self, item, player, board):
         self.done = False
         self.item = item
         self.player = player
+        self.resource_deck = board.cards_deck
 
         def do():
             cost = self.costs[item]
@@ -26,11 +85,12 @@ class PayAction(Action):
             if missing:
                 cost = ', '.join(['{}*{}'.format(c, r) for r, c in cost.items()])
                 missing = ', '.join(['{}*{}'.format(c, r) for r, c in missing.items()])
-                print('Resources not available for a {}: it costs {}'.format(item, cost))
-                print('You are missing: {}'.format(missing))
+                self.player.announce('Resources not available for a {}: it costs {}'.format(item, cost))
+                self.player.announce('You are missing: {}'.format(missing))
                 return False
             for resource, count in cost.items():
                 player.resource_cards[resource] -= count
+                resource_deck.accept(resource, count)
             self.done = True
             return True
 
@@ -38,6 +98,7 @@ class PayAction(Action):
             if not self.done:
                 return False
             for resource, count in self.costs[item]:
+                count = resource_deck.give(resource, count)
                 player.resource_cards[resource] += count
             return True
 
@@ -49,7 +110,7 @@ class BuildRoadAction(Action):
         self.board = board
         self.current_player = player
         if pay:
-            payment = PayAction('road', player)
+            payment = PayAction('road', player, board)
         else:
             payment = Action()
 
@@ -60,7 +121,7 @@ class BuildRoadAction(Action):
             road.available = False
             player.roads_built.append(road)
             player.roads -= 1
-            print("{} has built road {}".format(player.color.capitalize(), road.road_id))
+            self.current_player.announce("{} has built road {}".format(player.color.capitalize(), road.road_id))
             self.done = True
             return True
 
@@ -72,7 +133,7 @@ class BuildRoadAction(Action):
                 road.available = True
                 player.roads_built.remove(road)
                 player.roads += 1
-                print("{} undid the road {}".format(player.color.capitalize(), road.road_id))
+                self.current_player.announce("{} undid the road {}".format(player.color.capitalize(), road.road_id))
                 return True
 
         super().__init__(do, undo)
@@ -84,7 +145,7 @@ class BuildSettelmentAction(Action):
         self.board = board
         self.current_player = player
         if pay:
-            payment = PayAction('settlement', player)
+            payment = PayAction('settlement', player, board)
         else:
             payment = Action()
 
@@ -99,7 +160,7 @@ class BuildSettelmentAction(Action):
             self.current_player.points += 1
             self.current_player.settlements -= 1
             self.done = True
-            print("{} built a settelment on {}".format(self.current_player.color.capitalize(), sett.settelment_id))
+            self.current_player.announce("{} built a settelment on {}".format(self.current_player.color.capitalize(), sett.settelment_id))
             return True
 
         def undo():
@@ -113,7 +174,7 @@ class BuildSettelmentAction(Action):
                     s.available = True
                 self.current_player.points -= 1
                 self.current_player.settlements += 1
-                print("{} undid the settelment on {}".format(self.current_player.color.capitalize(), sett.settelment_id))
+                self.current_player.announce("{} undid the settelment on {}".format(self.current_player.color.capitalize(), sett.settelment_id))
                 return True
             return False
 
@@ -126,7 +187,7 @@ class BuildCityAction(Action):
         self.board = board
         self.current_player = player
         if pay:
-            payment = PayAction('city', player)
+            payment = PayAction('city', player, board)
         else:
             payment = Action()
 
@@ -141,7 +202,7 @@ class BuildCityAction(Action):
             sett.settelment = False
             sett.city = True
             self.done = True
-            print("{} built a city on {}".format(self.current_player.color.capitalize(), sett.settelment_id))
+            self.current_player.announce("{} built a city on {}".format(self.current_player.color.capitalize(), sett.settelment_id))
             return True
 
         def undo():
@@ -155,7 +216,7 @@ class BuildCityAction(Action):
                 self.current_player.settlements -= 1
                 sett.settelment = True
                 sett.city = False
-                print("{} undid the city on {}".format(self.current_player.color.capitalize(), sett.settelment_id))
+                self.current_player.announce("{} undid the city on {}".format(self.current_player.color.capitalize(), sett.settelment_id))
                 return True
 
         super().__init__(do, undo)
@@ -173,7 +234,7 @@ class PlaceRobberAction(Action):
             self.board.previous_blocked = self.board.current_blocked
             self.board.tiles[tile_id].blocked = True
             self.board.current_blocked = tile_id
-            print("{} placed the robber on tile {}: The number {} and resource {}".format(
+            self.current_player.announce("{} placed the robber on tile {}: The number {} and resource {}".format(
                 self.current_player.color.capitalize(),
                 self.board.tiles[tile_id].tile_id,
                 self.board.tiles[tile_id].number,
@@ -189,9 +250,9 @@ class PlaceRobberAction(Action):
                     self.board.tiles[self.board.previous_blocked].blocked = True
                 self.board.current_blocked = self.board.previous_blocked
                 self.board.tiles[tile_id].blocked = False
-                print("{} undid the robber on tile {}".format(
+                self.current_player.announce("{} undid the robber on tile {}".format(
                     self.current_player.color.capitalize(), self.board.tiles[tile_id].tile_id))
-                print("Robber moved back to tile {}: The number {} and resource {}".format(
+                self.current_player.announce("Robber moved back to tile {}: The number {} and resource {}".format(
                     self.board.tiles[self.board.previous_blocked].tile_id,
                     self.board.tiles[self.board.previous_blocked].number,
                     self.board.tiles[self.board.previous_blocked].resource))
@@ -209,7 +270,7 @@ class BuyDCAction(Action):
         self.current_player = player
         self.card = self.board.dev_cards[0]
         if pay:
-            payment = PayAction('development card', player)
+            payment = PayAction('development card', player, board)
         else:
             payment = Action()
 
@@ -218,7 +279,7 @@ class BuyDCAction(Action):
                 return False
             self.current_player.dev_cards.append(self.card)
             self.board.dev_cards.remove(self.card)
-            print("{} bought a Development Card and it's {}".format(
+            self.current_player.announce("{} bought a Development Card and it's {}".format(
                 self.current_player.color.capitalize(),
                 self.card.card_type)
             )

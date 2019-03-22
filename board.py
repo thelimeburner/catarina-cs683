@@ -120,7 +120,7 @@ class Board(object):
         for tile in tiles_id:
             resource_index = randint(0, last_n)
             self.tiles.append(Tile(tile, resources[resource_index]))
-            print("Tile #{} is now {}".format(tile, resources[resource_index]))
+            #print("Tile #{} is now {}".format(tile, resources[resource_index]))
             del resources[resource_index]
             last_n -= 1
         starting_point = randrange(0, 11, 2)
@@ -137,10 +137,10 @@ class Board(object):
         for tile in tiles_id:
             if self.tiles[tile].resource is 'Desert':
                 self.tiles[tile].blocked = True
-                print("Tile #{} is a Desert".format(self.tiles[tile].tile_id))
+                #print("Tile #{} is a Desert".format(self.tiles[tile].tile_id))
                 continue
             self.tiles[tile].update_number(numbers[0])
-            print("Tile #{} has the number {}".format(self.tiles[tile].tile_id, numbers[0]))
+            #print("Tile #{} has the number {}".format(self.tiles[tile].tile_id, numbers[0]))
             del numbers[0]
 
         for road_id in range(0, 72):
@@ -204,4 +204,3 @@ class Board(object):
         for t in self.tiles:
             if t.resource == 'Desert':
                 self.current_blocked = t.tile_id
-
