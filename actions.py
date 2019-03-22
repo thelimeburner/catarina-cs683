@@ -25,7 +25,7 @@ class RollAction(Action):
                         self.player.announce("The robber cannot remain on the same tile")
                     else:
                         break
-                action = PlaceRobberAction(self.board, self.current_player, tile_id)
+                action = PlaceRobberAction(self.board, self.player, tile_id)
                 if action.do():
                     self.robber_action = action
                 return True

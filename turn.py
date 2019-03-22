@@ -88,7 +88,9 @@ class Turn(object):
         return True
 
     def parse_action(self, choice):
-        if choice.startswith("r"):
+        if choice == 'pdb':
+            import pdb; pdb.set_trace()
+        elif choice.startswith("r"):
             self.build_road(int(choice[1:]))
         elif choice.startswith("s"):
             if self.board.settelments[int(choice[1:])].owner is self.current_player:

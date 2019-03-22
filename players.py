@@ -65,7 +65,6 @@ class Player(object):
         while True:
             choice = input("{}, what would you like to do: ".format(self.color.capitalize()))
             if choice == 'end' or choice in globals.CONTROLS or choice.startswith(globals.HACKS):
-                print('choice: ', choice)
                 return choice
             print("Invalid input.")
 
@@ -75,3 +74,7 @@ class Player(object):
         event = self.announcements.get(event, event)
         kwargs['current_player'] = self.color.capitalize()
         print(event.format(**kwargs))
+
+    def available_roads(self):
+        for road in self.roads_built:
+            print(road)
