@@ -2,18 +2,20 @@
 
 import collections
 import json
-import edge as e
+
+import .edge as e
+from res import PATH as RES_PATH
 
 
-with open('./res/asci_board4.json', 'r') as fh:
+with open(os.path.join(RES_PATH, 'asci_board4.json'), 'r') as fh:
     board_roads = json.load(fh)
-with open('./res/asci_board_sett.json', 'r') as fh:
+with open(os.path.join(RES_PATH, 'asci_board_sett.json'), 'r') as fh:
     board_setts = json.load(fh)
-with open('./res/asci_board_num.json', 'r') as fh:
+with open(os.path.join(RES_PATH, 'asci_board_num.json'), 'r') as fh:
     board_num = json.load(fh)
-with open('./res/asci_board_src.json', 'r') as fh:
+with open(os.path.join(RES_PATH, '/asci_board_src.json'), 'r') as fh:
     board_src = json.load(fh)
-with open('./res/asci_board_rbr.json', 'r') as fh:
+with open(os.path.join(RES_PATH, 'asci_board_rbr.json'), 'r') as fh:
     board_rbr = json.load(fh)
 
 # init display 73:44
