@@ -1,8 +1,9 @@
-from game_config import FRIENDLY_ROBBER, MOCK_UP
-import globals
-import actions
-
 from random import randint
+
+from ..game_config import FRIENDLY_ROBBER, MOCK_UP
+from .. import globals
+from . import actions
+
 
 
 class Turn(object):

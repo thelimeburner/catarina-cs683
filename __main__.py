@@ -1,12 +1,15 @@
-from players import Player
-from board import Board
-import globals
-from game import Game
-import game_config
-import control
-import view
-import logging
 import json
+import logging
+import os
+
+from . import globals
+from . import game_config
+from .control import control
+from .view import view
+from .model.game import Game
+from .model.players import Player
+from .model.board import Board
+from .model.res import PATH as RES_PATH
 
 
 def main():
@@ -16,7 +19,7 @@ def main():
     # import the board skeleton in json format
     logging.info("Starting a new game")
     globals.init()
-    with open("board_map.json") as json_data:
+    with open(os.path.join(RES_PATH, "board_map.json")) as json_data:
         board_map = json.load(json_data)
     # initialize controllers
     globals.CONTROLS = control.get_all_controllers(board_map)

@@ -1,15 +1,17 @@
 #!/usr/bin/env python
-
-from game_config import VIEW_CHARS
-import globals
 import collections
 import json
-import edge as e
+import os
+
+from .. import globals
+from ..game_config import VIEW_CHARS
+from ..model import edge as e
+from ..model.res import PATH as RES_PATH
 
 
 def initialize_board():
     # import the asci board json
-    with open('whole_asci_board.json', 'r') as fh:
+    with open(os.path.join(RES_PATH, 'whole_asci_board.json'), 'r') as fh:
         view_json = json.load(fh)
     globals.BOARD_VIEW = view_json
 

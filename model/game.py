@@ -1,10 +1,11 @@
-from collections import defaultdict
-from players import Player
-import view
-from random import randint
-from turn import Turn
 import networkx as nx
-from game_config import *
+from collections import defaultdict
+from random import randint
+
+from ..game_config import *
+from ..model.players import Player
+from ..view import view
+from ..control.turn import Turn
 
 
 class Game(object):

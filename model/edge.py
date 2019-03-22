@@ -1,4 +1,4 @@
-from shape import Shape
+from ..model.shape import Shape
 
 
 class Edge(Shape):
