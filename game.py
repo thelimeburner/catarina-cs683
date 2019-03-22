@@ -5,7 +5,6 @@ from turn import Turn
 import networkx as nx
 from game_config import *
 
-
 class Game(object):
     def __init__(self, playing_colors, board):
         self.playing_colors = playing_colors
@@ -40,10 +39,10 @@ class Game(object):
         done = False
         while not done:
             if pregame:
-                if self.turn.pregame_player_action(mock_up=MOCK_UP):
+                if self.current_player.take_turn(self.turn, self, True, MOCK_UP):
                     done = self.end_pregame_turn()
             else:
-                if self.turn.player_action():
+                if self.current_player.take_turn(self.turn, self):
                     done = self.end_turn()
         return done
 

@@ -102,9 +102,41 @@ class Player(object):
                     ret.append(corner)
         return ret
 
+    def take_turn(self, turn, game=None, pregame=False, mock_up=None):
+        if pregame:
+            return turn.pregame_player_action(mock_up=mock_up)
+        return turn.player_action()
+
 class AI(Player):
     def announce(self, event, **kwargs):
         pass
 
     def show_board(self, board):
         pass
+
+    def choose_robber_placement(self):
+        raise NotImplementedError
+
+    def choose_settlement_placement(self):
+        raise NotImplementedError
+
+    def choose_road_placement(self):
+        raise NotImplementedError
+
+    def choose_action(self):
+        raise NotImplementedError
+
+    class GameState(object):
+        def __init__(self, turn, game):
+            self.turn = turn
+            self.game = game
+            self.turn_number = len(game.turn_history)
+
+        def restore(self):
+            self.game.revert_turn(self.turn_number)
+
+class RandomAI(AI):
+
+
+    def take_turn(self, turn, game=None, pregame=False, mock_up=None):
+        return turn.player_action()
