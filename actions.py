@@ -90,7 +90,7 @@ class PayAction(Action):
                 return False
             for resource, count in cost.items():
                 player.resource_cards[resource] -= count
-                resource_deck.accept(resource, count)
+                self.resource_deck.accept(resource, count)
             self.done = True
             return True
 
@@ -98,7 +98,7 @@ class PayAction(Action):
             if not self.done:
                 return False
             for resource, count in self.costs[item]:
-                count = resource_deck.give(resource, count)
+                count = self.resource_deck.give(resource, count)
                 player.resource_cards[resource] += count
             return True
 
@@ -155,7 +155,7 @@ class BuildSettelmentAction(Action):
             sett.available = False
             sett.owner = self.current_player
             self.current_player.settlements_built.append(sett)
-            for s in sett.neighbours:
+            for s in sett.neighbors:
                 s.available = False
             self.current_player.points += 1
             self.current_player.settlements -= 1
@@ -170,7 +170,7 @@ class BuildSettelmentAction(Action):
                 sett.available = True
                 sett.owner = None
                 del self.current_player.settlements_built[-1]
-                for s in sett.neighbours:
+                for s in sett.neighbors:
                     s.available = True
                 self.current_player.points -= 1
                 self.current_player.settlements += 1

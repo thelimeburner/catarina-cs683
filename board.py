@@ -52,8 +52,8 @@ class Road(object):
         self.road_id = road_id
         self.available = True
         self.owner = []
-        self.neighbour_roads = []
-        self.neighbour_settelments = []
+        self.neighbor_roads = []
+        self.neighbor_settelments = []
 
     def check_avilability(self):
         if self.available:
@@ -76,8 +76,8 @@ class Settelment(object):
         self.city = False
         self.player = None
         self.tiles = []
-        self.neighbours = []
-        self.neighbour_roads = []
+        self.neighbors = []
+        self.neighbor_roads = []
 
     def check_avilability(self):
         if self.available:
@@ -162,9 +162,9 @@ class Board(object):
 
     def _connect_settelments(self):
         for settelment in self.settelments:
-            for key_settelment, value_neighbour_settelments in self.board_map['neighbour_settelments'].items():
+            for key_settelment, value_neighbor_settelments in self.board_map['neighbor_settelments'].items():
                 if int(key_settelment) is settelment.settelment_id:
-                    settelment.neighbours = [self.settelments[idx] for idx in value_neighbour_settelments]
+                    settelment.neighbors = [self.settelments[idx] for idx in value_neighbor_settelments]
         for settelment in self.settelments:
             for key_settelment, value_connected_tiles in self.board_map['tiles_for_each_settelment'].items():
                 if int(key_settelment) is settelment.settelment_id:
@@ -172,7 +172,7 @@ class Board(object):
         for settelment in self.settelments:
             for key_settelment, value_connected_roads in self.board_map['settelments_and_roads'].items():
                 if int(key_settelment) is settelment.settelment_id:
-                    settelment.neighbour_roads = [self.roads[idx] for idx in value_connected_roads]
+                    settelment.neighbor_roads = [self.roads[idx] for idx in value_connected_roads]
         for settelment in self.settelments:
             for tile in settelment.tiles:
                 settelment.numbers.add(tile.number)
@@ -181,11 +181,11 @@ class Board(object):
         for road in self.roads:
             for key_road, value_connecting_roads in self.board_map['connecting_roads'].items():
                 if int(key_road) is road.road_id:
-                    road.neighbour_roads = [self.roads[idx] for idx in value_connecting_roads]
+                    road.neighbor_roads = [self.roads[idx] for idx in value_connecting_roads]
         for road in self.roads:
-            for key_road, neighbour_settelments in self.board_map['roads_and_settelments'].items():
+            for key_road, neighbor_settelments in self.board_map['roads_and_settelments'].items():
                 if int(key_road) is road.road_id:
-                    road.neighbour_settelments = [self.settelments[idx] for idx in neighbour_settelments]
+                    road.neighbor_settelments = [self.settelments[idx] for idx in neighbor_settelments]
 
     def _stack_development_card(self):
         cards = {

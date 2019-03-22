@@ -89,6 +89,8 @@ class Turn(object):
 
     def parse_action(self, choice):
         if choice == 'pdb':
+            pl = self.current_player
+            pl.available_settlements()
             import pdb; pdb.set_trace()
         elif choice.startswith("r"):
             self.build_road(int(choice[1:]))
@@ -220,15 +222,15 @@ class Turn(object):
         if road.available:
             if pregame_sett is not None:
                 if pregame_sett.owner is self.current_player:
-                    for r in pregame_sett.neighbour_roads:
+                    for r in pregame_sett.neighbor_roads:
                         if r is road:
                             return True
             else:
-                for sett in road.neighbour_settelments:
+                for sett in road.neighbor_settelments:
                     if sett.owner is self.current_player:
                         return True
                     elif sett.owner is None:
-                        for r in sett.neighbour_roads:
+                        for r in sett.neighbor_roads:
                             if r is road:
                                 continue
                             if r.owner is self.current_player:
@@ -252,7 +254,7 @@ class Turn(object):
             if first:
                 return True
             else:
-                for road in sett.neighbour_roads:
+                for road in sett.neighbor_roads:
                     if road.owner is self.current_player:
                         return True
         return False

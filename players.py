@@ -1,4 +1,4 @@
-import globals
+import globals, view
 
 class Player(object):
     def __init__(self, color):
@@ -75,6 +75,36 @@ class Player(object):
         kwargs['current_player'] = self.color.capitalize()
         print(event.format(**kwargs))
 
+    def show_board(self, board):
+        view.update_view(board)
+
     def available_roads(self):
+        ret = []
         for road in self.roads_built:
-            print(road)
+            for neighbor in road.neighbor_roads:
+                corner = (set(neighbor.neighbor_settelments)&set(road.neighbor_settelments)).pop()
+                if neighbor.check_avilability() and (corner.owner == None or corner.owner == self):
+                    ret.append(neighbor)
+        return ret
+
+    def available_settlements(self):
+        ret = []
+        for road in self.roads_built:
+            for corner in road.neighbor_settelments:
+                if corner.owner:
+                    continue
+                available = True
+                for r in corner.neighbor_roads:
+                    for c in r.neighbor_settelments:
+                        if c.owner:
+                            available = False
+                if available:
+                    ret.append(corner)
+        return ret
+
+class AI(Player):
+    def announce(self, event, **kwargs):
+        pass
+
+    def show_board(self, board):
+        pass

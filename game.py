@@ -1,6 +1,5 @@
 from collections import defaultdict
 from players import Player
-import view
 from random import randint
 from turn import Turn
 import networkx as nx
@@ -34,6 +33,7 @@ class Game(object):
         self.first_player = self.players[0]
 
     def player_turn(self, pregame=False):
+        self.current_player.show_board(self.board)
         self.current_player.announce("Current turn: {} player".format(self.current_player.color.capitalize()))
         self.turn = Turn(self.board, self.current_player)
         self.turn_history.append(self.turn)
@@ -49,7 +49,6 @@ class Game(object):
 
     def end_pregame_turn(self):
         self.current_player = self.current_player.next_player
-        view.update_view(self.board)
         return True
 
     def end_turn(self):
@@ -60,7 +59,6 @@ class Game(object):
             self.winner = self.current_player
             return True
         self.current_player = self.current_player.next_player
-        view.update_view(self.board)
         return True
 
     def revert_turn(self, turn=None):
@@ -105,9 +103,9 @@ class Game(object):
         pairs = []
         seen = set([])
         for road in self.current_player.roads_built:
-            for s in road.neighbour_settelments:
+            for s in road.neighbor_settelments:
                 if s.owner is self.current_player or s.owner is None:
-                    for r in s.neighbour_roads:
+                    for r in s.neighbor_roads:
                         if r in seen:
                             continue
                         if r is not road and r.owner is self.current_player:
@@ -117,9 +115,9 @@ class Game(object):
 
     def _connected_road(self, road):
         connected = ()
-        for s in road.neighbour_settelments:
+        for s in road.neighbor_settelments:
             if s.owner is self.current_player or s.owner is None:
-                for r in s.neighbour_roads:
+                for r in s.neighbor_roads:
                     if r is road:
                         continue
                     else:
