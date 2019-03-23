@@ -25,7 +25,7 @@ def get_roads_controllers(board_map):
 
 def get_setts_controllers(board_map):
     setts = []
-    setts.extend(sort_them(board_map["neighbour_settelments"], "s"))
+    setts.extend(sort_them(board_map["neighbor_settelments"], "s"))
     return setts
 
 
@@ -39,7 +39,7 @@ def get_tiles_controllers(board_map):
 def get_all_controllers(board_map):
     list_of_controllers = []
     list_of_controllers.extend(sort_them(board_map["roads_and_settelments"], "r"))
-    list_of_controllers.extend(sort_them(board_map["neighbour_settelments"], "s"))
+    list_of_controllers.extend(sort_them(board_map["neighbor_settelments"], "s"))
     list_of_controllers.extend(sort_them(board_map["tiles_and_settelments"], "t"))
     list_of_controllers.extend(GAME_CONTROLS)
     return list_of_controllers

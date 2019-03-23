@@ -11,7 +11,6 @@ from .model.players import Player
 from .model.board import Board
 from .model.res import PATH as RES_PATH
 
-
 def main():
     logging.basicConfig(format="%(asctime)s.%(msecs)03d %(levelname)s>  %(message)s",
                         datefmt="%Y/%m/%d %H:%M:%S",
@@ -23,7 +22,7 @@ def main():
         board_map = json.load(json_data)
     # initialize controllers
     globals.CONTROLS = control.get_all_controllers(board_map)
-    globals.HACKS = ("dice=", "end=")
+    globals.HACKS = ("dice=", "end=", "pdb")
     globals.SPECIFIC_CONTROLS = {
         "roads": control.get_roads_controllers(board_map),
         "setts": control.get_setts_controllers(board_map),

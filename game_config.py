@@ -45,6 +45,7 @@ PLAYER_COLORS = 'default'
 
 #MOCK_UP = [31, 32, 33, 35, 35, 38, 37, 41, 39, 44, 41, 68]
 MOCK_UP = 'random'
+#MOCK_UP = False
 FRIENDLY_ROBBER = False
 
 VIEW_CHARS = {

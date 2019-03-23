@@ -141,6 +141,7 @@
             32
         ],
         "35": [
+            4,
             33
         ],
         "36": [
@@ -686,7 +687,7 @@
             51
         ]
     },
-    "neighbour_settelments": {
+    "neighbor_settelments": {
         "42": [
             19,
             41,
