@@ -1,4 +1,5 @@
-import globals, view
+from .. import globals
+from ..view import view
 
 class Player(object):
     def __init__(self, color):
