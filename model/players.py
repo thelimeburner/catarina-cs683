@@ -1,6 +1,8 @@
 from .. import globals
 from ..view import view
 
+from random import choice, random, randrange
+
 class Player(object):
     def __init__(self, color):
         self.color = color
@@ -108,6 +110,52 @@ class Player(object):
             return turn.pregame_player_action(mock_up=mock_up)
         return turn.player_action()
 
+    def ports(self):
+        ret = set()
+        for settlement in self.settlements_built:
+            if settlement.port:
+                ret.add(settlement.port)
+        return ret
+
+    def possible_resources(self):
+        ports = self.ports()
+        def reduce(resources):
+            ret = set([resources])
+            for port in ports:
+                if port == '3:1':
+                    for resource in resources:
+                        if resource in ports or resources[resource] < 3:
+                            continue
+                        reduced = dict(resources)
+                        reduced[resource] -= 3
+                        for resource in reduced:
+                            increased = dict(reduced)
+                            increased[resource] += 1
+                            ret |= reduce(increased)
+                    continue
+                if resources[port] < 2:
+                    continue
+                reduced = dict(resources)
+                reduced[port] -= 2
+                for resource in reduced:
+                    increased = dict(increased)
+                    increased[resource] += 1
+                    ret |= reduce(increased)
+            if '3:1' not in ports:
+                return ret
+            for resource in resources:
+                if resource in ports or resources[resource] < 4:
+                    continue
+                reduced = dict(resources)
+                reduced[resource] -= 4
+                for resource in reduced:
+                    increased = dict(reduced)
+                    increased[resource] += 1
+                    ret |= reduce(increased)
+            return ret
+
+        return reduce(dict(self.resource_cards))
+
 class AI(Player):
     def announce(self, event, **kwargs):
         pass
@@ -137,7 +185,11 @@ class AI(Player):
             self.game.revert_turn(self.turn_number)
 
 class RandomAI(AI):
+    def choose_robber_placement(self):
+        return randrange(19)
 
+    def choose_road_placement(self):
+        return choice(self.available_roads())
 
-    def take_turn(self, turn, game=None, pregame=False, mock_up=None):
-        return turn.player_action()
+    def choose_settlement_placement(self):
+        return choice(self.available_settlements())

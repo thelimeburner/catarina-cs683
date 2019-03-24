@@ -78,6 +78,7 @@ class Settelment(object):
         self.tiles = []
         self.neighbors = []
         self.neighbor_roads = []
+        self.port = None
 
     def check_avilability(self):
         if self.available:
@@ -147,6 +148,9 @@ class Board(object):
             self.roads.append(Road(road_id))
         for settelment_id in range(0, 54):
             self.settelments.append(Settelment(settelment_id))
+        for port, settlements in self.board_map['ports'].items():
+            for settlement in settlements:
+                self.settlements[settlement].port = port
         self.cards_deck = ResourceDeck()
         self._connect_roads()
         self._connect_settelments()
