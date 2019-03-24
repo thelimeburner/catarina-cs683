@@ -31,7 +31,7 @@
             21
         ]
     },
-    "roads_and_settelments": {
+    "roads_and_settlements": {
         "0": [
             29,
             0
@@ -719,7 +719,7 @@
             51
         ]
     },
-    "neighbor_settelments": {
+    "neighbor_settlements": {
         "42": [
             19,
             41,
@@ -973,7 +973,7 @@
             51
         ]
     },
-    "tiles_for_each_settelment": {
+    "tiles_for_each_settlement": {
         "42": [
             7,
             8,
@@ -1197,7 +1197,7 @@
             18
         ]
     },
-    "settelments_and_roads": {
+    "settlements_and_roads": {
         "42": [
             49,
             50,
@@ -1451,7 +1451,7 @@
             65
         ]
     },
-    "tiles_and_settelments": {
+    "tiles_and_settlements": {
         "11": [
             27,
             28,

@@ -104,7 +104,7 @@ class Game(object):
         pairs = []
         seen = set([])
         for road in self.current_player.roads_built:
-            for s in road.neighbor_settelments:
+            for s in road.neighbor_settlements:
                 if s.owner is self.current_player or s.owner is None:
                     for r in s.neighbor_roads:
                         if r in seen:
@@ -116,7 +116,7 @@ class Game(object):
 
     def _connected_road(self, road):
         connected = ()
-        for s in road.neighbor_settelments:
+        for s in road.neighbor_settlements:
             if s.owner is self.current_player or s.owner is None:
                 for r in s.neighbor_roads:
                     if r is road:

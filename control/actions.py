@@ -35,11 +35,11 @@ class RollAction(Action):
                         for s in t.buildings:
                             if s.owner is not None:
                                 cards = 2 if s.city else 1
-                                self.player.announce("{player} has gained {cards} {resource} from settelment {sett}".format(
+                                self.player.announce("{player} has gained {cards} {resource} from settlement {sett}".format(
                                     player=s.owner.color.capitalize(),
                                     cards=2 if s.city else 1,
                                     resource=t.resource,
-                                    sett=s.settelment_id
+                                    sett=s.settlement_id
                                 ))
                                 cards = self.board.cards_deck.give(t.resource.lower(), 2 if s.city else 1)
                                 self.cards_gained[s.owner] = self.cards_gained.get(s.owner, {
@@ -104,6 +104,55 @@ class PayAction(Action):
 
         super().__init__(do, undo)
 
+class TradeAction(Action):
+    def __init__(self, board, player, count, old, new):
+        self.done = False
+        self.deck = board.cards_deck
+        self.player = player
+        self.count = count
+        self.old = old
+        self.new = new
+
+        def do():
+            if self.player.resource_cards[self.old] < self.count:
+                self.player.announce("You don't have enough {} to trade.".format(self.old))
+                return False
+            ports = self.player.ports()
+            if self.count == 3 and '3:1' not in ports:
+                self.player.announce("You need a 3:1 port to trade at a 3:1 ratio.")
+                return False
+            if self.count == 2 and self.old not in ports:
+                self.player.announce("You need a {r} port to trade {r} at a 2:1 ratio.".format(r=self.old))
+                return False
+            new_cards = self.deck.give(self.new)
+            if not new_cards:
+                self.player.announce("There aren't any {} cards left to trade for.".format(self.new))
+                return False
+            self.deck.accept(self.old, self.count)
+            self.player.resource_cards[self.old] -= self.count
+            self.player.resource_cards[self.new] += new_cards
+            self.player.announce("Trading {} {} for 1 {}.".format(self.count, self.old, self.new))
+            self.done = True
+            return True
+
+        def undo():
+            if not self.done:
+                return False
+            if not self.player.resource_cards[self.new]:
+                self.player.announce("You don't have any {} to give back.".format(self.old))
+                return False
+            ports = self.player.ports()
+            if self.deck.deck[self.old] < self.count:
+                self.player.announce("The deck doesn't have enough {} cards left to undo the trade.".format(self.new))
+                return False
+            new_cards = self.deck.give(self.old, self.count)
+            self.deck.accept(self.new)
+            self.player.resource_cards[self.old] += new_cards
+            self.player.resource_cards[self.new] -= 1
+            return True
+
+        super().__init__(do, undo)
+
 class BuildRoadAction(Action):
     def __init__(self, board, player, road, pay=False):
         self.done = False
@@ -160,7 +209,7 @@ class BuildSettelmentAction(Action):
             self.current_player.points += 1
             self.current_player.settlements -= 1
             self.done = True
-            self.current_player.announce("{} built a settelment on {}".format(self.current_player.color.capitalize(), sett.settelment_id))
+            self.current_player.announce("{} built a settlement on {}".format(self.current_player.color.capitalize(), sett.settlement_id))
             return True
 
         def undo():
@@ -174,7 +223,7 @@ class BuildSettelmentAction(Action):
                     s.available = True
                 self.current_player.points -= 1
                 self.current_player.settlements += 1
-                self.current_player.announce("{} undid the settelment on {}".format(self.current_player.color.capitalize(), sett.settelment_id))
+                self.current_player.announce("{} undid the settlement on {}".format(self.current_player.color.capitalize(), sett.settlement_id))
                 return True
             return False
 
@@ -199,10 +248,10 @@ class BuildCityAction(Action):
             self.current_player.points += 1
             self.current_player.cities -= 1
             self.current_player.settlements += 1
-            sett.settelment = False
+            sett.settlement = False
             sett.city = True
             self.done = True
-            self.current_player.announce("{} built a city on {}".format(self.current_player.color.capitalize(), sett.settelment_id))
+            self.current_player.announce("{} built a city on {}".format(self.current_player.color.capitalize(), sett.settlement_id))
             return True
 
         def undo():
@@ -214,9 +263,9 @@ class BuildCityAction(Action):
                 self.current_player.points -= 1
                 self.current_player.cities += 1
                 self.current_player.settlements -= 1
-                sett.settelment = True
+                sett.settlement = True
                 sett.city = False
-                self.current_player.announce("{} undid the city on {}".format(self.current_player.color.capitalize(), sett.settelment_id))
+                self.current_player.announce("{} undid the city on {}".format(self.current_player.color.capitalize(), sett.settlement_id))
                 return True
 
         super().__init__(do, undo)

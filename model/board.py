@@ -53,7 +53,7 @@ class Road(object):
         self.available = True
         self.owner = []
         self.neighbor_roads = []
-        self.neighbor_settelments = []
+        self.neighbor_settlements = []
 
     def check_avilability(self):
         if self.available:
@@ -66,13 +66,13 @@ class Road(object):
 
 
 class Settelment(object):
-    def __init__(self, settelment_id):
-        self.settelment_id = settelment_id
+    def __init__(self, settlement_id):
+        self.settlement_id = settlement_id
         self.available = True
         self.owner = None
         self.blocked = False
         self.numbers = set([])
-        self.settelment = True
+        self.settlement = True
         self.city = False
         self.player = None
         self.tiles = []
@@ -91,7 +91,7 @@ class Settelment(object):
         self.available = False
 
     def upgrade(self):
-        self.settelment = False
+        self.settlement = False
         self.city = True
 
 
@@ -103,7 +103,7 @@ class Board(object):
         self.roads = []
         self.cards_deck = None
         self.dev_cards = []
-        self.settelments = []
+        self.settlements = []
         self.longest_road = None
         self.largest_army = None
         self.previous_blocked = None
@@ -146,40 +146,40 @@ class Board(object):
 
         for road_id in range(0, 72):
             self.roads.append(Road(road_id))
-        for settelment_id in range(0, 54):
-            self.settelments.append(Settelment(settelment_id))
+        for settlement_id in range(0, 54):
+            self.settlements.append(Settelment(settlement_id))
         for port, settlements in self.board_map['ports'].items():
             for settlement in settlements:
                 self.settlements[settlement].port = port
         self.cards_deck = ResourceDeck()
         self._connect_roads()
-        self._connect_settelments()
+        self._connect_settlements()
         self._connect_tiles()
         self._stack_development_card()
         self._init_robber()
 
     def _connect_tiles(self):
         for tile in self.tiles:
-            for key_tile, value_connected_settelments in self.board_map['tiles_and_settelments'].items():
+            for key_tile, value_connected_settlements in self.board_map['tiles_and_settlements'].items():
                 if int(key_tile) is tile.tile_id:
-                    tile.buildings = [self.settelments[idx] for idx in value_connected_settelments]
+                    tile.buildings = [self.settlements[idx] for idx in value_connected_settlements]
 
-    def _connect_settelments(self):
-        for settelment in self.settelments:
-            for key_settelment, value_neighbor_settelments in self.board_map['neighbor_settelments'].items():
-                if int(key_settelment) is settelment.settelment_id:
-                    settelment.neighbors = [self.settelments[idx] for idx in value_neighbor_settelments]
-        for settelment in self.settelments:
-            for key_settelment, value_connected_tiles in self.board_map['tiles_for_each_settelment'].items():
-                if int(key_settelment) is settelment.settelment_id:
-                    settelment.tiles = [self.tiles[idx] for idx in value_connected_tiles]
-        for settelment in self.settelments:
-            for key_settelment, value_connected_roads in self.board_map['settelments_and_roads'].items():
-                if int(key_settelment) is settelment.settelment_id:
-                    settelment.neighbor_roads = [self.roads[idx] for idx in value_connected_roads]
-        for settelment in self.settelments:
-            for tile in settelment.tiles:
-                settelment.numbers.add(tile.number)
+    def _connect_settlements(self):
+        for settlement in self.settlements:
+            for key_settlement, value_neighbor_settlements in self.board_map['neighbor_settlements'].items():
+                if int(key_settlement) is settlement.settlement_id:
+                    settlement.neighbors = [self.settlements[idx] for idx in value_neighbor_settlements]
+        for settlement in self.settlements:
+            for key_settlement, value_connected_tiles in self.board_map['tiles_for_each_settlement'].items():
+                if int(key_settlement) is settlement.settlement_id:
+                    settlement.tiles = [self.tiles[idx] for idx in value_connected_tiles]
+        for settlement in self.settlements:
+            for key_settlement, value_connected_roads in self.board_map['settlements_and_roads'].items():
+                if int(key_settlement) is settlement.settlement_id:
+                    settlement.neighbor_roads = [self.roads[idx] for idx in value_connected_roads]
+        for settlement in self.settlements:
+            for tile in settlement.tiles:
+                settlement.numbers.add(tile.number)
 
     def _connect_roads(self):
         for road in self.roads:
@@ -187,9 +187,9 @@ class Board(object):
                 if int(key_road) is road.road_id:
                     road.neighbor_roads = [self.roads[idx] for idx in value_connecting_roads]
         for road in self.roads:
-            for key_road, neighbor_settelments in self.board_map['roads_and_settelments'].items():
+            for key_road, neighbor_settlements in self.board_map['roads_and_settlements'].items():
                 if int(key_road) is road.road_id:
-                    road.neighbor_settelments = [self.settelments[idx] for idx in neighbor_settelments]
+                    road.neighbor_settlements = [self.settlements[idx] for idx in neighbor_settlements]
 
     def _stack_development_card(self):
         cards = {

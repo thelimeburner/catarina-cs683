@@ -107,8 +107,8 @@ def update_view(board):
     background = set_board_background()
     # iterate through all roads
     roads = fixed_shape(board.roads, "roads")
-    # iterate through all settelments
-    setts = fixed_shape(board.settelments, "settlements")
+    # iterate through all settlements
+    setts = fixed_shape(board.settlements, "settlements")
     # iterate through all numbers on tiles
     nums = text_in_shape(board.tiles, "numbers")
     # iterate through all resources on tiles

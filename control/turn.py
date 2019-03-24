@@ -22,15 +22,15 @@ class Turn(object):
         while not built_sett:
             if mock_up == 'random':
                 choice_sett = randrange(54)
-                while not self.build_settelment(choice_sett, first=True, pay=False, silent=True):
+                while not self.build_settlement(choice_sett, first=True, pay=False, silent=True):
                     choice_sett = randrange(54)
                 break
             elif mock_up:
                 choice_sett = MOCK_UP[0]
-                self.current_player.announce("{}, where would you like to place a settelment: {}".format(
+                self.current_player.announce("{}, where would you like to place a settlement: {}".format(
                     self.current_player.color.capitalize(), MOCK_UP[0]))
                 del MOCK_UP[0]
-                if self.build_settelment(choice_sett, first=True, pay=False):
+                if self.build_settlement(choice_sett, first=True, pay=False):
                     break
             choice_sett = self.current_player.choose_settlement_placement()
             if choice_sett == 'undo':
@@ -40,7 +40,7 @@ class Turn(object):
                 else:
                     print("Nothing to Undo")
             else:
-                if self.build_settelment(choice_sett, first=True, pay=False):
+                if self.build_settlement(choice_sett, first=True, pay=False):
                     built_sett = True
         while not built_road:
             if mock_up == 'random':
@@ -72,6 +72,8 @@ class Turn(object):
     def player_action(self):
         self.roll = actions.RollAction(self.board, self.current_player)
         self.roll.do()
+        from pprint import pprint
+        pprint(self.current_player.possible_actions(self.board.cards_deck.deck))
         while True:
             current = self.current_player
             resources = ', '.join(['{}*{}'.format(c, r) for r, c in current.resource_cards.items() if c])
@@ -94,17 +96,30 @@ class Turn(object):
             pl = self.current_player
             pl.available_settlements()
             import pdb; pdb.set_trace()
+        elif choice.startswith("t"):
+            try:
+                i = choice.index(':')
+                count = int(choice[1])
+                old = choice[2:i]
+                new = choice[i+1:]
+            except (ValueError, IndexError):
+                self.current_player.announce('Trades must be formated as "t<#><old>:<new>", i.e. "t3wood:sheep"')
+                return
+            action = actions.TradeAction(self.board, self.current_player, count, old, new)
+            if action.do():
+                self.actions.append(action)
+            return
         elif choice.startswith("r"):
             self.build_road(int(choice[1:]))
         elif choice.startswith("s"):
-            if self.board.settelments[int(choice[1:])].owner is self.current_player:
-                if not self.board.settelments[int(choice[1:])].city:
-                    self.upgrade_settelment(int(choice[1:]))
+            if self.board.settlements[int(choice[1:])].owner is self.current_player:
+                if not self.board.settlements[int(choice[1:])].city:
+                    self.upgrade_settlement(int(choice[1:]))
                 else:
                     self.current_player.announce("Cannot upgrade. It is already a city")
                     return
             else:
-                self.build_settelment(int(choice[1:]))
+                self.build_settlement(int(choice[1:]))
         # temporary hack: enter "D" and the number you wish to score
         elif choice.startswith("D"):
             self.roll_dice(int(choice[1:]))
@@ -163,11 +178,11 @@ class Turn(object):
                     for s in t.buildings:
                         if s.owner is not None:
                             cards = 2 if s.city else 1
-                            self.current_player.announce("{player} has gained {cards} {resource} from settelment {sett}".format(
+                            self.current_player.announce("{player} has gained {cards} {resource} from settlement {sett}".format(
                                 player=s.owner.color.capitalize(),
                                 cards=2 if s.city else 1,
                                 resource=t.resource,
-                                sett=s.settelment_id
+                                sett=s.settlement_id
                             ))
                             cards = self.board.cards_deck.give(t.resource.lower(), 2 if s.city else 1)
                             s.owner.resource_cards[t.resource.lower()] += 2 if s.city else 1
@@ -203,7 +218,7 @@ class Turn(object):
         road = self.board.roads[road_id]
         if self.current_player.roads > 0:
             if sett is not None:
-                if not self.road_spot_available(road, self.board.settelments[sett]):
+                if not self.road_spot_available(road, self.board.settlements[sett]):
                     if not silent:
                         self.current_player.announce("Spot not available!")
                     return False
@@ -228,7 +243,7 @@ class Turn(object):
                         if r is road:
                             return True
             else:
-                for sett in road.neighbor_settelments:
+                for sett in road.neighbor_settlements:
                     if sett.owner is self.current_player:
                         return True
                     elif sett.owner is None:
@@ -239,11 +254,11 @@ class Turn(object):
                                 return True
         return False
 
-    def build_settelment(self, sett_id, first=False, pay=True, silent=False):
-        sett = self.board.settelments[sett_id]
+    def build_settlement(self, sett_id, first=False, pay=True, silent=False):
+        sett = self.board.settlements[sett_id]
         if not self.sett_spot_available(sett, first):
             if not silent:
-                self.current_player.announce("Cannot build on a settelment on", sett_id)
+                self.current_player.announce("Cannot build on a settlement on", sett_id)
             return False
         action = actions.BuildSettelmentAction(self.board, self.current_player, sett, pay=pay)
         if action.do():
@@ -261,10 +276,10 @@ class Turn(object):
                         return True
         return False
 
-    def upgrade_settelment(self, settelment_id, pay=True):
-        sett = self.board.settelments[settelment_id]
+    def upgrade_settlement(self, settlement_id, pay=True):
+        sett = self.board.settlements[settlement_id]
         if sett.owner is not self.current_player:
-            self.current_player.announce("Cannot build on a city on", sett.settelment_id)
+            self.current_player.announce("Cannot build on a city on", sett.settlement_id)
             return False
         action = actions.BuildCityAction(self.board, self.current_player, sett, pay=pay)
         self.actions.append(action)
