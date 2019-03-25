@@ -28,6 +28,8 @@ PLAYERS_ORDER = {
     }
 }
 
+PLAYERS_SPECIES = ['RandomAI', 'RandomAI', 'Player', 'Player']
+
 """
 User input options:
     Keyboard

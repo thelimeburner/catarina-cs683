@@ -3,7 +3,7 @@ from collections import defaultdict
 from random import randint
 
 from ..game_config import *
-from ..model.players import Player
+from ..model import players
 from ..view import view
 from ..control.turn import Turn
 
@@ -26,9 +26,12 @@ class Game(object):
         # print("First player is {}".format(self.first_player.color))
 
     def seat_players(self):
-        self.players = [Player(self.first_player)]
+        player_species = []
+        for species in PLAYERS_SPECIES:
+            player_species.append(vars(players)[species])
+        self.players = [player_species[0](self.first_player, self.board)]
         for i in range(0, len(self.playing_colors) - 1):
-            self.players.append(Player(PLAYERS_ORDER[len(self.playing_colors)][self.players[-1].color]))
+            self.players.append(player_species[i+1](PLAYERS_ORDER[len(self.playing_colors)][self.players[-1].color], self.board))
             self.players[-2].next_player = self.players[-1]
         self.players[-1].next_player = self.players[0]
         self.first_player = self.players[0]

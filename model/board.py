@@ -64,6 +64,11 @@ class Road(object):
     def update_status(self, available):
         self.available = available
 
+    def __str__(self):
+        return 'r{}'.format(self.road_id)
+
+    __repr__ = __str__
+
 
 class Settelment(object):
     def __init__(self, settlement_id):
@@ -93,6 +98,11 @@ class Settelment(object):
     def upgrade(self):
         self.settlement = False
         self.city = True
+
+    def __str__(self):
+        return 's{}'.format(self.settlement_id)
+
+    __repr__ = __str__
 
 
 class Board(object):

@@ -4,8 +4,9 @@ from ..view import view
 from random import choice, random, randrange
 
 class Player(object):
-    def __init__(self, color):
+    def __init__(self, color, board):
         self.color = color
+        self.board = board
         self.player_id = None
         self.name = None
         self.next_player = None
@@ -81,25 +82,31 @@ class Player(object):
     def show_board(self, board):
         view.update_view(board)
 
-    def available_roads(self):
+    def available_roads(self, roads=None):
+        if roads is None:
+            roads = self.roads_built
         ret = []
-        for road in self.roads_built:
+        for road in roads:
             for neighbor in road.neighbor_roads:
                 corner = (set(neighbor.neighbor_settlements)&set(road.neighbor_settlements)).pop()
                 if neighbor.check_avilability() and (corner.owner == None or corner.owner == self):
                     ret.append(neighbor)
         return ret
 
-    def available_settlements(self):
+    def available_settlements(self, settlements=None, roads=None):
+        if settlements is None:
+            settlements = self.settlements_built
+        if roads is None:
+            roads = self.roads_built
         ret = []
-        for road in self.roads_built:
+        for road in roads:
             for corner in road.neighbor_settlements:
-                if corner.owner:
+                if corner.owner or corner in settlements:
                     continue
                 available = True
                 for r in corner.neighbor_roads:
                     for c in r.neighbor_settlements:
-                        if c.owner:
+                        if c.owner or c in settlements:
                             available = False
                 if available:
                     ret.append(corner)
@@ -117,8 +124,10 @@ class Player(object):
                 ret.add(settlement.port)
         return ret
 
-    def possible_resources(self, resource_deck, resources=None):
-        if resources == None:
+    def possible_resources(self, resource_deck=None, resources=None):
+        if resource_deck is None:
+            resource_deck = self.board.cards_deck.deck
+        if resources is None:
             resources = self.resource_cards
         ports = self.ports()
         def reduce(path, resources, resource_deck):
@@ -174,22 +183,22 @@ class Player(object):
                     ret.extend(reduce(new_path, reduced, deck))
             return ret
 
-        return sorted(reduce([], dict(resources), dict(resource_deck)), key=lambda x: sum([n for n in x[1].values()]), reverse=True)
+        return sorted(reduce([], dict(resources), dict(self.board.cards_deck.deck)), key=lambda x: sum([n for n in x[1].values()]), reverse=True)
 
     costs = {#'development card': {'sheep': 1, 'ore': 1, 'grain': 1},
              'settlement':       {'sheep': 1, 'brick': 1, 'grain': 1, 'wood': 1},
              'city':             {'grain': 2, 'ore': 3},
              'road':             {'brick': 1, 'wood': 1}}
 
-    def possible_actions(self, resource_deck):
-        def safe_recurse(actions, resources, deck, cost):
+    def possible_actions(self):
+        def safe_recurse(actions, resources, deck, settlements, roads, cities, cost):
             resources = dict(resources)
             deck = dict(deck)
             for resource, quant in cost.items():
                 resources[resource] -= quant
                 deck[resource] += quant
-            return single_buy(actions, resources, deck)
-        def single_buy(actions, resources, resource_deck):
+            return single_buy(actions, resources, deck, settlements, roads, cities)
+        def single_buy(actions, resources, resource_deck, settlements, roads, cities):
             possible_resources = self.possible_resources(resource_deck, resources=resources)
             ret = [actions]
             for action, cost in self.costs.items():
@@ -201,40 +210,52 @@ class Player(object):
                             break
                     if can_pay:
                         if action == 'settlement' and self.settlements:
-                            for corner in self.available_settlements():
+                            for corner in self.available_settlements(settlements=settlements, roads=roads):
                                 new_action = 's{}'.format(corner)
                                 if new_action not in actions:
                                     new_actions = actions + trades
                                     new_actions.append(new_action)
-                                    ret.extend(safe_recurse(new_actions, resources, deck, cost))
+                                    new_settlements = list(settlements)
+                                    new_settlements.append(corner)
+                                    ret.extend(safe_recurse(new_actions, resources, deck, new_settlements, roads, cost))
                         elif action == 'city' and self.cities:
-                            for settlement in self.settlements_built:
+                            for settlement in settlements:
+                                if settlement in cities or settlement.city:
+                                    continue
                                 new_action = 's{}'.format(settlement.settlement_id)
                                 if new_action not in actions:
                                     new_actions = actions + trades
                                     new_actions.append(new_action)
-                                    ret.extend(safe_recurse(new_actions, resources, deck, cost))
+                                    new_cities = list(cities)
+                                    new_cities.append(settlement)
+                                    ret.extend(safe_recurse(new_actions, resources, deck, settlements, roads, new_cities, cost))
                         elif action == 'road' and self.roads:
-                            for edge in self.available_roads():
+                            for edge in self.available_roads(roads=roads):
                                 new_action = 'r{}'.format(edge.road_id)
                                 if new_action not in actions:
                                     new_actions = actions + trades
                                     new_actions.append(new_action)
-                                    ret.extend(safe_recurse(new_actions, resources, deck, cost))
+                                    new_roads = list(roads)
+                                    new_roads.append(edge)
+                                    ret.extend(safe_recurse(new_actions, resources, deck, settlements, new_roads, cities, cost))
                         break
             return ret
 
-        ret = single_buy([], self.resource_cards, resource_deck)
+        ret = single_buy([], self.resource_cards, self.board.cards_deck.deck, self.settlements_built, self.roads_built, [])
         for action in ret:
             action.append('end')
         return ret
 
 class AI(Player):
-    def announce(self, event, **kwargs):
-        pass
+    def __init__(self, color, board):
+        self.plan = []
+        super().__init__(color, board)
 
-    def show_board(self, board):
-        pass
+    '''def announce(self, event, **kwargs):
+        pass'''
+
+    '''def show_board(self, board):
+        pass'''
 
     def choose_robber_placement(self):
         raise NotImplementedError
@@ -266,3 +287,12 @@ class RandomAI(AI):
 
     def choose_settlement_placement(self):
         return choice(self.available_settlements())
+
+    def take_turn(self, turn, game=None, pregame=False, mock_up=None):
+        if pregame:
+            return turn.pregame_player_action(mock_up=mock_up)
+        self.plan = choice(self.possible_actions())
+        return turn.player_action()
+
+    def choose_action(self):
+        return self.plan.pop(0)
