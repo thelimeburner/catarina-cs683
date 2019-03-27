@@ -48,7 +48,7 @@ class Player(object):
                 tile_id = int(tile_id)
                 assert 0 <= tile_id < 54
             except (ValueError, AssertionError):
-                print('Please input an integer from 0 through 54, inclusive, or "undo"')
+                print('Please input an integer from 0 through 53, inclusive, or "undo"')
         return tile_id
 
     def choose_road_placement(self):
@@ -249,6 +249,8 @@ class Player(object):
 class AI(Player):
     def __init__(self, color, board):
         self.plan = []
+        self.state_tree = None
+        self.current_state = None
         super().__init__(color, board)
 
     '''def announce(self, event, **kwargs):
@@ -277,6 +279,47 @@ class AI(Player):
 
         def restore(self):
             self.game.revert_turn(self.turn_number)
+
+    class State(object):
+        def __init__(self, parent=None, **kwargs):
+            self.parent = parent
+            if parent:
+                parent.add_child(self)
+            self.children = []
+            self.num_leaves = 0
+            self.num_wins = 0
+            self.features = kwargs
+
+        def add_child(self, child):
+            self.children.append(child)
+
+    def extract_features(self, game):
+        features = {}
+        for player in game.players:
+            color = player.color
+            player_dict = {}
+            player_dict['setts'] = 5-player.settlements
+            player_dict['roads'] = 15-player.roads
+            player_dict['cities'] = 4-player.cities
+            possible_ports = ['3:1']
+            player_dict['EVs'] = {}
+            for resource, count in player.resource_cards:
+                player_dict[resource] = count
+                possible_ports.append(resource)
+                player_dict['EVs'][resource] = 0
+            ports = player.ports()
+            player_dict['ports'] = {}
+            for port in possible_ports:
+                player_dict['ports'][port] = port in ports
+            features[color] = player_dict
+        for tile in game.board.tiles:
+            if tile.blocked:
+                continue
+            rolls = 6 - abs(tile.number-7)
+            for building in tile.buildings:
+                mult = 2 if building.city else 1
+                features[building.owner.color.capitalize()]['EVs'][tile.resource] += mult * rolls
+        return features
 
 class RandomAI(AI):
     def choose_robber_placement(self):
