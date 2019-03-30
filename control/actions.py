@@ -58,7 +58,7 @@ class RollAction(Action):
                 return self.robber_action.undo()
             for player, resources in self.cards_gained.items():
                 for resource in resources:
-                    s.owner.resource_cards[resource] -= resources[resource]
+                    self.player.resource_cards[resource] -= resources[resource]
                     self.board.cards_deck.accept(resource, resources[resource])
             return True
 
@@ -97,7 +97,7 @@ class PayAction(Action):
         def undo():
             if not self.done:
                 return False
-            for resource, count in self.costs[item]:
+            for resource, count in self.costs[item].items():
                 count = self.resource_deck.give(resource, count)
                 player.resource_cards[resource] += count
             return True
@@ -188,7 +188,7 @@ class BuildRoadAction(Action):
         super().__init__(do, undo)
 
 
-class BuildSettelmentAction(Action):
+class BuildSettlementAction(Action):
     def __init__(self, board, player, sett, pay=False):
         self.done = False
         self.board = board
@@ -235,6 +235,7 @@ class BuildCityAction(Action):
         self.done = False
         self.board = board
         self.current_player = player
+        self.sett = sett
         if pay:
             payment = PayAction('city', player, board)
         else:
@@ -243,29 +244,29 @@ class BuildCityAction(Action):
         def do():
             if not payment.do():
                 return False
-            self.current_player.settlements_built.remove(sett)
-            self.current_player.cities_built.append(sett)
+            self.current_player.settlements_built.remove(self.sett)
+            self.current_player.cities_built.append(self.sett)
             self.current_player.points += 1
             self.current_player.cities -= 1
             self.current_player.settlements += 1
-            sett.settlement = False
-            sett.city = True
+            self.sett.settlement = False
+            self.sett.city = True
             self.done = True
-            self.current_player.announce("{} built a city on {}".format(self.current_player.color.capitalize(), sett.settlement_id))
+            self.current_player.announce("{} built a city on {}".format(self.current_player.color.capitalize(), self.sett.settlement_id))
             return True
 
         def undo():
             if self.done:
                 if not payment.undo():
                     return False
-                self.current_player.settlements_built.append(sett)
-                self.current_player.cities_built.remove(sett)
+                self.current_player.settlements_built.append(self.sett)
+                self.current_player.cities_built.remove(self.sett)
                 self.current_player.points -= 1
                 self.current_player.cities += 1
                 self.current_player.settlements -= 1
-                sett.settlement = True
-                sett.city = False
-                self.current_player.announce("{} undid the city on {}".format(self.current_player.color.capitalize(), sett.settlement_id))
+                self.sett.settlement = True
+                self.sett.city = False
+                self.current_player.announce("{} undid the city on {}".format(self.current_player.color.capitalize(), self.sett.settlement_id))
                 return True
 
         super().__init__(do, undo)

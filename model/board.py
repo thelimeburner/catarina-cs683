@@ -70,7 +70,7 @@ class Road(object):
     __repr__ = __str__
 
 
-class Settelment(object):
+class Settlement(object):
     def __init__(self, settlement_id):
         self.settlement_id = settlement_id
         self.available = True
@@ -157,7 +157,7 @@ class Board(object):
         for road_id in range(0, 72):
             self.roads.append(Road(road_id))
         for settlement_id in range(0, 54):
-            self.settlements.append(Settelment(settlement_id))
+            self.settlements.append(Settlement(settlement_id))
         for port, settlements in self.board_map['ports'].items():
             for settlement in settlements:
                 self.settlements[settlement].port = port

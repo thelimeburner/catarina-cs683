@@ -2,6 +2,7 @@ from .. import globals
 from ..view import view
 
 from random import choice, random, randrange
+from csv import DictWriter
 
 class Player(object):
     def __init__(self, color, board):
@@ -211,13 +212,13 @@ class Player(object):
                     if can_pay:
                         if action == 'settlement' and self.settlements:
                             for corner in self.available_settlements(settlements=settlements, roads=roads):
-                                new_action = 's{}'.format(corner)
+                                new_action = 's{}'.format(corner.settlement_id)
                                 if new_action not in actions:
                                     new_actions = actions + trades
                                     new_actions.append(new_action)
                                     new_settlements = list(settlements)
                                     new_settlements.append(corner)
-                                    ret.extend(safe_recurse(new_actions, resources, deck, new_settlements, roads, cost))
+                                    ret.extend(safe_recurse(new_actions, resources, deck, new_settlements, roads, cities, cost))
                         elif action == 'city' and self.cities:
                             for settlement in settlements:
                                 if settlement in cities or settlement.city:
@@ -229,7 +230,7 @@ class Player(object):
                                     new_cities = list(cities)
                                     new_cities.append(settlement)
                                     ret.extend(safe_recurse(new_actions, resources, deck, settlements, roads, new_cities, cost))
-                        elif action == 'road' and self.roads:
+                        elif action == 'road' and self.roads - len([x for x in actions if x[0] == 'r']) > 0:
                             for edge in self.available_roads(roads=roads):
                                 new_action = 'r{}'.format(edge.road_id)
                                 if new_action not in actions:
@@ -246,18 +247,22 @@ class Player(object):
             action.append('end')
         return ret
 
+    def end_game_hook(self, won=True):
+        return True
+
 class AI(Player):
     def __init__(self, color, board):
         self.plan = []
         self.state_tree = None
         self.current_state = None
+        self.turns_remaining = 10**2
         super().__init__(color, board)
 
-    '''def announce(self, event, **kwargs):
-        pass'''
+    def announce(self, event, **kwargs):
+        pass
 
-    '''def show_board(self, board):
-        pass'''
+    def show_board(self, board):
+        pass
 
     def choose_robber_placement(self):
         raise NotImplementedError
@@ -271,15 +276,6 @@ class AI(Player):
     def choose_action(self):
         raise NotImplementedError
 
-    class GameState(object):
-        def __init__(self, turn, game):
-            self.turn = turn
-            self.game = game
-            self.turn_number = len(game.turn_history)
-
-        def restore(self):
-            self.game.revert_turn(self.turn_number)
-
     class State(object):
         def __init__(self, parent=None, **kwargs):
             self.parent = parent
@@ -292,6 +288,18 @@ class AI(Player):
 
         def add_child(self, child):
             self.children.append(child)
+            child.parent = self
+
+        def ancestry(self):
+            state = self
+            while state:
+                yield state
+                state = state.parent
+
+        def decendants(self):
+            yield self
+            for child in self.children():
+                yield from child.descendents()
 
     def extract_features(self, game):
         features = {}
@@ -303,7 +311,7 @@ class AI(Player):
             player_dict['cities'] = 4-player.cities
             possible_ports = ['3:1']
             player_dict['EVs'] = {}
-            for resource, count in player.resource_cards:
+            for resource, count in player.resource_cards.items():
                 player_dict[resource] = count
                 possible_ports.append(resource)
                 player_dict['EVs'][resource] = 0
@@ -313,13 +321,57 @@ class AI(Player):
                 player_dict['ports'][port] = port in ports
             features[color] = player_dict
         for tile in game.board.tiles:
-            if tile.blocked:
+            if tile.blocked or not tile.number:
                 continue
             rolls = 6 - abs(tile.number-7)
             for building in tile.buildings:
+                if not building.owner:
+                    continue
                 mult = 2 if building.city else 1
-                features[building.owner.color.capitalize()]['EVs'][tile.resource] += mult * rolls
+                features[building.owner.color.capitalize()]['EVs'][tile.resource.lower()] += mult * rolls
         return features
+
+    def end_game_hook(self, game, won=False):
+        tree_depth = 0
+        if won:
+            Player.show_board(self, game.board)
+            print('{} won!'.format(self.color.capitalize()))
+        for ancestor in self.current_state.ancestry():
+            tree_depth += 1
+            if won:
+                ancestor.num_wins += 1
+            ancestor.num_leaves += 1
+        if self.turns_remaining > 0:
+            to_turn = min(0, tree_depth - randrange(12, tree_depth))
+            for i, ancestor in enumerate(self.current_state.ancestry()):
+                if i == tree_depth - to_turn:
+                    self.current_state = ancestor
+                    break
+            self.turns_remaining -= to_turn
+            game.revert_turn(to_turn)
+            return True
+
+        return False
+
+    def record_features(self, output_file=None):
+        if output_file is None:
+            output_file = '{}_features.csv'.format(self.color)
+        def flatten(features, prefix=''):
+            ret = {}
+            for k, v in features.items():
+                if type(v) == type({}):
+                    ret.update(flatten(v, prefix='{}_{}'.format(prefix, k)))
+                else:
+                    ret[k] = v
+            return ret
+        fieldnames = sorted(flatten(self.state_tree.features).keys(), key=str.lower)
+        fieldnames.append('win_prop')
+        writer = DictWriter(output_file, fieldnames=fieldnames)
+        writer.writeheader()
+        for state in self.state_tree.descendents():
+            features = flatten(state.features)
+            features.append('{.4f}'.format(state.num_leaves/state.num_leaves))
+            writer.writerow()
 
 class RandomAI(AI):
     def choose_robber_placement(self):
@@ -331,10 +383,12 @@ class RandomAI(AI):
     def choose_settlement_placement(self):
         return choice(self.available_settlements())
 
-    def take_turn(self, turn, game=None, pregame=False, mock_up=None):
+    def take_turn(self, turn, game, pregame=False, mock_up=None):
         if pregame:
             return turn.pregame_player_action(mock_up=mock_up)
         self.plan = choice(self.possible_actions())
+        new_state = self.State(parent=self.current_state, **self.extract_features(game))
+        self.current_state = new_state
         return turn.player_action()
 
     def choose_action(self):

@@ -28,7 +28,7 @@ PLAYERS_ORDER = {
     }
 }
 
-PLAYERS_SPECIES = ['RandomAI', 'RandomAI', 'Player', 'Player']
+PLAYERS_SPECIES = ['RandomAI', 'RandomAI', 'RandomAI', 'Player']
 
 """
 User input options:

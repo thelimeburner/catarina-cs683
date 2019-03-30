@@ -17,6 +17,7 @@ class Game(object):
         self.robber = None
         self.turn = None
         self.winner = None
+        self.VP = 8
 
         self.turn_history = []
 
@@ -43,6 +44,9 @@ class Game(object):
         self.turn_history.append(self.turn)
         done = False
         while not done:
+            turns = len(self.turn_history)
+            if turns % 10 == 0:
+                print(turns)
             if pregame:
                 if self.current_player.take_turn(self.turn, self, True, MOCK_UP):
                     done = self.end_pregame_turn()
@@ -57,16 +61,18 @@ class Game(object):
 
     def end_turn(self):
         self.count_longest_road()
-        self.count_largest_army()
+        #self.count_largest_army()
         self.board.dice = None
-        if self.current_player.points >= 10:
+        if self.current_player.points >= self.VP and not self.current_player.end_game_hook(self, won=True):
+            for player in self.players:
+                player.record_features()
             self.winner = self.current_player
             return True
         self.current_player = self.current_player.next_player
         return True
 
     def revert_turn(self, turn=None):
-        if turn == None:
+        if turn is None:
             return self.revert_turn(len(self.turn_history) - 1)
         while len(self.turn_history) > turn:
             self.turn_history[-1].undo_turn()

@@ -72,8 +72,6 @@ class Turn(object):
     def player_action(self):
         self.roll = actions.RollAction(self.board, self.current_player)
         self.roll.do()
-        from pprint import pprint
-        pprint(self.current_player.possible_actions())
         while True:
             current = self.current_player
             resources = ', '.join(['{}*{}'.format(c, r) for r, c in current.resource_cards.items() if c])
@@ -260,7 +258,7 @@ class Turn(object):
             if not silent:
                 self.current_player.announce("Cannot build on a settlement on", sett_id)
             return False
-        action = actions.BuildSettelmentAction(self.board, self.current_player, sett, pay=pay)
+        action = actions.BuildSettlementAction(self.board, self.current_player, sett, pay=pay)
         if action.do():
             self.actions.append(action)
             return True
@@ -282,7 +280,6 @@ class Turn(object):
             self.current_player.announce("Cannot build on a city on", sett.settlement_id)
             return False
         action = actions.BuildCityAction(self.board, self.current_player, sett, pay=pay)
-        self.actions.append(action)
         if action.do():
             self.actions.append(action)
             return True
@@ -317,12 +314,13 @@ class Turn(object):
             return False
         last_action = self.actions[-1]
         last_action.undo()
-        self.actions.remove(last_action)
+        self.actions = self.actions[:-1]
 
     def undo_turn(self):
         while len(self.actions) > 0:
             self.undo()
-        self.roll.undo()
+        if self.roll:
+            self.roll.undo()
 
     def friendly_robber(self, tile_id):
         if self.board.tiles[tile_id].resource == 'Desert':
