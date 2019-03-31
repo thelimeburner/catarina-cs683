@@ -54,11 +54,11 @@ class Game(object):
                 else:
                     if self.current_player.take_turn(self.turn, self):
                         done = self.end_turn()
-        except KeyboardInterrupt:
+        except KeyboardInterrupt as e:
             print("Keyboard interrupt: recording features and exiting.")
             for player in self.players:
                 player.record_features()
-            exit(0)
+            raise e
         return done
 
     def end_pregame_turn(self):
