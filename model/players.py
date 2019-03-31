@@ -296,10 +296,10 @@ class AI(Player):
                 yield state
                 state = state.parent
 
-        def decendants(self):
+        def descendants(self):
             yield self
-            for child in self.children():
-                yield from child.descendents()
+            for child in self.children:
+                yield from child.descendants()
 
     def extract_features(self, game):
         features = {}
@@ -359,19 +359,22 @@ class AI(Player):
         def flatten(features, prefix=''):
             ret = {}
             for k, v in features.items():
-                if type(v) == type({}):
-                    ret.update(flatten(v, prefix='{}_{}'.format(prefix, k)))
+                if type(v) is dict:
+                    ret.update(flatten(v, prefix='{}{}_'.format(prefix, k)))
                 else:
-                    ret[k] = v
+                    ret[prefix + k] = v
             return ret
         fieldnames = sorted(flatten(self.state_tree.features).keys(), key=str.lower)
         fieldnames.append('win_prop')
-        writer = DictWriter(output_file, fieldnames=fieldnames)
-        writer.writeheader()
-        for state in self.state_tree.descendents():
-            features = flatten(state.features)
-            features.append('{.4f}'.format(state.num_leaves/state.num_leaves))
-            writer.writerow()
+        with open(output_file, 'w') as output_file:
+            writer = DictWriter(output_file, fieldnames=fieldnames)
+            writer.writeheader()
+            for state in self.state_tree.descendants():
+                if state.num_leaves == 0:
+                    continue
+                features = flatten(state.features)
+                features['win_prop'] = '{:.4f}'.format(state.num_wins/state.num_leaves)
+                writer.writerow(features)
 
 class RandomAI(AI):
     def choose_robber_placement(self):
@@ -389,6 +392,8 @@ class RandomAI(AI):
         self.plan = choice(self.possible_actions())
         new_state = self.State(parent=self.current_state, **self.extract_features(game))
         self.current_state = new_state
+        if not self.state_tree:
+            self.state_tree = new_state
         return turn.player_action()
 
     def choose_action(self):

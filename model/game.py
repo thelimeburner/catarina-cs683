@@ -43,16 +43,22 @@ class Game(object):
         self.turn = Turn(self.board, self.current_player)
         self.turn_history.append(self.turn)
         done = False
-        while not done:
-            turns = len(self.turn_history)
-            if turns % 10 == 0:
-                print(turns)
-            if pregame:
-                if self.current_player.take_turn(self.turn, self, True, MOCK_UP):
-                    done = self.end_pregame_turn()
-            else:
-                if self.current_player.take_turn(self.turn, self):
-                    done = self.end_turn()
+        try:
+            while not done:
+                turns = len(self.turn_history)
+                if turns % 10 == 0:
+                    print(turns)
+                if pregame:
+                    if self.current_player.take_turn(self.turn, self, True, MOCK_UP):
+                        done = self.end_pregame_turn()
+                else:
+                    if self.current_player.take_turn(self.turn, self):
+                        done = self.end_turn()
+        except KeyboardInterrupt:
+            print("Keyboard interrupt: recording features and exiting.")
+            for player in self.players:
+                player.record_features()
+            exit(0)
         return done
 
     def end_pregame_turn(self):
