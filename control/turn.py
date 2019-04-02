@@ -255,8 +255,12 @@ class Turn(object):
     def build_settlement(self, sett_id, first=False, pay=True, silent=False):
         sett = self.board.settlements[sett_id]
         if not self.sett_spot_available(sett, first):
+            if pay:
+                from ..model.players import Player
+                Player.show_board(self.current_player, self.board)
+                import pdb, inspect; from pprint import pprint; pdb.set_trace()
             if not silent:
-                self.current_player.announce("Cannot build on a settlement on", sett_id)
+                self.current_player.announce("Cannot build on a settlement on " + str(sett_id))
             return False
         action = actions.BuildSettlementAction(self.board, self.current_player, sett, pay=pay)
         if action.do():
@@ -313,7 +317,9 @@ class Turn(object):
         if len(self.actions) == 0:
             return False
         last_action = self.actions[-1]
-        last_action.undo()
+        if not last_action.undo():
+            print("undo failed")
+            import pdb, inspect; from pprint import pprint; pdb.set_trace()
         self.actions = self.actions[:-1]
 
     def undo_turn(self):

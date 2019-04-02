@@ -41,7 +41,8 @@ class Game(object):
         self.current_player.show_board(self.board)
         self.current_player.announce("Current turn: {} player".format(self.current_player.color.capitalize()))
         self.turn = Turn(self.board, self.current_player)
-        self.turn_history.append(self.turn)
+        if not pregame:
+            self.turn_history.append(self.turn)
         done = False
         try:
             while not done:
@@ -55,9 +56,13 @@ class Game(object):
                     if self.current_player.take_turn(self.turn, self):
                         done = self.end_turn()
         except KeyboardInterrupt as e:
-            print("Keyboard interrupt: recording features and exiting.")
+            print("Keyboard interrupt: recording features and raising.")
             for player in self.players:
                 player.record_features()
+            from traceback import print_exc
+            print_exc()
+            players.Player.show_board(self.current_player, self.board)
+            import pdb, inspect; pdb.set_trace()
             raise e
         return done
 
@@ -88,6 +93,7 @@ class Game(object):
         else:
             self.current_player = self.first_player
         self.board.dice = None
+        players.Player.show_board(self.current_player, self.board)
 
 
     def end_game(self):

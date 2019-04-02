@@ -201,7 +201,7 @@ class Player(object):
             return single_buy(actions, resources, deck, settlements, roads, cities)
         def single_buy(actions, resources, resource_deck, settlements, roads, cities):
             possible_resources = self.possible_resources(resource_deck, resources=resources)
-            ret = [actions]
+            ret = [(actions, resources, resource_deck)]
             for action, cost in self.costs.items():
                 for trades, resources, deck in possible_resources:
                     can_pay = True
@@ -242,10 +242,16 @@ class Player(object):
                         break
             return ret
 
-        ret = single_buy([], self.resource_cards, self.board.cards_deck.deck, self.settlements_built, self.roads_built, [])
-        for action in ret:
+        ret = []
+        actions = single_buy([], self.resource_cards, self.board.cards_deck.deck, self.settlements_built, self.roads_built, [])
+        for action, resources, resource_deck in actions:
+            action.extend(self.reduce_resources(resources, resource_deck))
             action.append('end')
+            ret.append(action)
         return ret
+
+    def reduce_resources(self, resources, resource_deck):
+        return []
 
     def end_game_hook(self, won=True):
         return True
@@ -341,8 +347,10 @@ class AI(Player):
             if won:
                 ancestor.num_wins += 1
             ancestor.num_leaves += 1
+        print('tree_depth: {}'.format(tree_depth))
         if self.turns_remaining > 0:
-            to_turn = min(0, tree_depth - randrange(12, tree_depth))
+            to_turn = max(0, tree_depth - randrange(12, tree_depth))
+            print('to_turn: {}'.format(to_turn))
             for i, ancestor in enumerate(self.current_state.ancestry()):
                 if i == tree_depth - to_turn:
                     self.current_state = ancestor
@@ -375,6 +383,42 @@ class AI(Player):
                 features = flatten(state.features)
                 features['win_prop'] = '{:.4f}'.format(state.num_wins/state.num_leaves)
                 writer.writerow(features)
+
+    def reduce_resources(self, resources, resource_deck):
+        ports = self.ports()
+        def reduce(resources, resource_deck):
+            if sum([c for c in resources.values()]) < 8:
+                return []
+            minimum = min([x for x in resources.keys() if resource_deck[x]], key=lambda x: resources[x])
+            max_count = -1
+            max_resource = None
+            cost = 0
+            for resource, count in resources.items():
+                if resource in ports and count - 2 > max_count:
+                    max_count = count - 2
+                    max_resource = resource
+                    cost = 2
+                elif '3:1' in ports and count - 3 > max_count:
+                    max_count = count - 3
+                    max_resource = resource
+                    cost = 3
+                elif count - 4 > max_count:
+                    max_count = count - 4
+                    max_resource = resource
+                    cost = 4
+            if max_resource is None:
+                return []
+            new_resources = dict(resources)
+            new_resources[minimum] += 1
+            new_resources[max_resource] -= cost
+            new_resource_deck = dict(resource_deck)
+            new_resource_deck[minimum] -= 1
+            new_resource_deck[max_resource] += cost
+            ret = ['t{}{}:{}'.format(cost, max_resource, minimum)]
+            ret.extend(reduce(new_resources, new_resource_deck))
+            return ret
+
+        return reduce(self.resource_cards, self.board.cards_deck.deck)
 
 class RandomAI(AI):
     def choose_robber_placement(self):

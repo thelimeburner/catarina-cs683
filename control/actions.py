@@ -58,7 +58,7 @@ class RollAction(Action):
                 return self.robber_action.undo()
             for player, resources in self.cards_gained.items():
                 for resource in resources:
-                    self.player.resource_cards[resource] -= resources[resource]
+                    player.resource_cards[resource] -= resources[resource]
                     self.board.cards_deck.accept(resource, resources[resource])
             return True
 
@@ -218,7 +218,7 @@ class BuildSettlementAction(Action):
                     return False
                 sett.available = True
                 sett.owner = None
-                del self.current_player.settlements_built[-1]
+                self.current_player.settlements_built.remove(sett)
                 for s in sett.neighbors:
                     s.available = True
                 self.current_player.points -= 1
