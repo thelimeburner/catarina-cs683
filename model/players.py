@@ -261,7 +261,7 @@ class AI(Player):
         self.plan = []
         self.state_tree = None
         self.current_state = None
-        self.turns_remaining = 10**2
+        self.turns_remaining = 10**3 - 100
         super().__init__(color, board)
 
     def announce(self, event, **kwargs):
@@ -340,17 +340,16 @@ class AI(Player):
     def end_game_hook(self, game, won=False):
         tree_depth = 0
         if won:
-            Player.show_board(self, game.board)
-            print('{} won!'.format(self.color.capitalize()))
+            print('{} won with {} VP!'.format(self.color.capitalize(), self.points))
         for ancestor in self.current_state.ancestry():
             tree_depth += 1
             if won:
                 ancestor.num_wins += 1
             ancestor.num_leaves += 1
-        print('tree_depth: {}'.format(tree_depth))
         if self.turns_remaining > 0:
+            if not won:
+                return True
             to_turn = max(0, tree_depth - randrange(12, tree_depth))
-            print('to_turn: {}'.format(to_turn))
             for i, ancestor in enumerate(self.current_state.ancestry()):
                 if i == tree_depth - to_turn:
                     self.current_state = ancestor

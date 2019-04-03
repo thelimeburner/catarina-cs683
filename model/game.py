@@ -47,8 +47,6 @@ class Game(object):
         try:
             while not done:
                 turns = len(self.turn_history)
-                if turns % 10 == 0:
-                    print(turns)
                 if pregame:
                     if self.current_player.take_turn(self.turn, self, True, MOCK_UP):
                         done = self.end_pregame_turn()
@@ -74,11 +72,16 @@ class Game(object):
         self.count_longest_road()
         #self.count_largest_army()
         self.board.dice = None
-        if self.current_player.points >= self.VP and not self.current_player.end_game_hook(self, won=True):
+        if self.current_player.points >= self.VP:
             for player in self.players:
-                player.record_features()
-            self.winner = self.current_player
-            return True
+                if player is self.current_player:
+                    continue
+                player.end_game_hook(self)
+            if not self.current_player.end_game_hook(self, won=True):
+                for player in self.players:
+                    player.record_features()
+                self.winner = self.current_player
+                return True
         self.current_player = self.current_player.next_player
         return True
 
@@ -93,7 +96,6 @@ class Game(object):
         else:
             self.current_player = self.first_player
         self.board.dice = None
-        players.Player.show_board(self.current_player, self.board)
 
 
     def end_game(self):
