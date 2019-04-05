@@ -261,7 +261,7 @@ class AI(Player):
         self.plan = []
         self.state_tree = None
         self.current_state = None
-        self.turns_remaining = 10**3 - 100
+        self.turns_remaining = 10**4
         super().__init__(color, board)
 
     def announce(self, event, **kwargs):
@@ -300,12 +300,25 @@ class AI(Player):
             state = self
             while state:
                 yield state
+                assert state.parent is not state
                 state = state.parent
 
         def descendants(self):
-            yield self
-            for child in self.children:
-                yield from child.descendants()
+            def left_leaf(node):
+                while node.children:
+                    node = node.children[0]
+                return node
+
+            current = left_leaf(self)
+
+            while current is not self:
+                yield current
+                index = current.parent.children.index(current)
+                if len(current.parent.children) == index + 1:
+                    current = current.parent
+                    continue
+                current = left_leaf(current.parent.children[index + 1])
+            yield current
 
     def extract_features(self, game):
         features = {}
@@ -337,24 +350,29 @@ class AI(Player):
                 features[building.owner.color.capitalize()]['EVs'][tile.resource.lower()] += mult * rolls
         return features
 
-    def end_game_hook(self, game, won=False):
-        tree_depth = 0
+    def end_game_hook(self, game, won=False, winner=True, to_turn=None):
+        tree_depth = len(game.turn_history)
+        minimum = 12 if winner else 48
+        to_turn = to_turn if to_turn else max(0, tree_depth - randrange(minimum, tree_depth))
         if won:
-            print('{} won with {} VP!'.format(self.color.capitalize(), self.points))
+            if self.turns_remaining <= 0:
+                print('{} won with {} VP in {} turns!'.format(self.color.capitalize(), self.points, len(game.turn_history)))
+            else:
+                print('{} won with {} VP in {} turns! Reverting to turn {}.'.format(self.color.capitalize(), self.points, len(game.turn_history), to_turn))
         for ancestor in self.current_state.ancestry():
-            tree_depth += 1
             if won:
                 ancestor.num_wins += 1
             ancestor.num_leaves += 1
         if self.turns_remaining > 0:
-            if not won:
-                return True
-            to_turn = max(0, tree_depth - randrange(12, tree_depth))
             for i, ancestor in enumerate(self.current_state.ancestry()):
                 if i == tree_depth - to_turn:
                     self.current_state = ancestor
                     break
+                if not winner:
+                    del ancestor
             self.turns_remaining -= to_turn
+            if not won:
+                return True
             game.revert_turn(to_turn)
             return True
 
@@ -437,6 +455,8 @@ class RandomAI(AI):
         self.current_state = new_state
         if not self.state_tree:
             self.state_tree = new_state
+        if turn.current_player is not self:
+            import pdb, inspect; from pprint import pprint; pdb.set_trace()
         return turn.player_action()
 
     def choose_action(self):

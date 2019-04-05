@@ -70,8 +70,6 @@ class Turn(object):
         return True
 
     def player_action(self):
-        self.roll = actions.RollAction(self.board, self.current_player)
-        self.roll.do()
         while True:
             current = self.current_player
             resources = ', '.join(['{}*{}'.format(c, r) for r, c in current.resource_cards.items() if c])

@@ -30,6 +30,12 @@ PLAYERS_ORDER = {
 
 PLAYERS_SPECIES = ['RandomAI', 'RandomAI', 'RandomAI', 'Player']
 
+# the target number of victory points
+VP = 8
+
+# the maximum number of turns a game should run for before giving up
+MAX_TURNS = 120
+
 """
 User input options:
     Keyboard

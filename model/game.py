@@ -1,11 +1,12 @@
 import networkx as nx
 from collections import defaultdict
-from random import randint
+from random import randint, randrange
 
 from ..game_config import *
 from ..model import players
 from ..view import view
 from ..control.turn import Turn
+from ..control import actions
 
 class Game(object):
     def __init__(self, playing_colors, board):
@@ -17,7 +18,6 @@ class Game(object):
         self.robber = None
         self.turn = None
         self.winner = None
-        self.VP = 8
 
         self.turn_history = []
 
@@ -43,10 +43,22 @@ class Game(object):
         self.turn = Turn(self.board, self.current_player)
         if not pregame:
             self.turn_history.append(self.turn)
+            self.turn.roll = actions.RollAction(self.board, self.current_player)
+            self.turn.roll.do()
         done = False
         try:
             while not done:
-                turns = len(self.turn_history)
+                if len(self.turn_history) >= MAX_TURNS:
+                    to_turn = max(0, len(self.turn_history) - randrange(48, len(self.turn_history)))
+                    print('Turn {} reached: reverting to turn {}'.format(MAX_TURNS, to_turn))
+                    for player in self.players:
+                        player.end_game_hook(self, winner=True, to_turn=to_turn)
+                    self.revert_turn(to_turn)
+                    self.current_player = self.current_player.next_player
+                    self.turn = Turn(self.board, self.current_player)
+                    self.turn_history.append(self.turn)
+                    self.turn.roll = actions.RollAction(self.board, self.current_player)
+                    self.turn.roll.do()
                 if pregame:
                     if self.current_player.take_turn(self.turn, self, True, MOCK_UP):
                         done = self.end_pregame_turn()
@@ -72,12 +84,13 @@ class Game(object):
         self.count_longest_road()
         #self.count_largest_army()
         self.board.dice = None
-        if self.current_player.points >= self.VP:
+        if self.current_player.points >= VP:
+            to_turn = max(0, len(self.turn_history) - randrange(12, len(self.turn_history)))
             for player in self.players:
                 if player is self.current_player:
                     continue
-                player.end_game_hook(self)
-            if not self.current_player.end_game_hook(self, won=True):
+                player.end_game_hook(self, to_turn=to_turn)
+            if not self.current_player.end_game_hook(self, won=True, to_turn=to_turn):
                 for player in self.players:
                     player.record_features()
                 self.winner = self.current_player
@@ -94,9 +107,11 @@ class Game(object):
         if self.turn_history:
             self.current_player = self.turn_history[-1].current_player
         else:
-            self.current_player = self.first_player
+            for player in self.players:
+                if player.next_player is self.first_player:
+                    self.current_player = player
+                    break
         self.board.dice = None
-
 
     def end_game(self):
         print("The winner is: {} with {} victory points".format(self.winner.color.capitalize(), self.winner.points))
