@@ -4,6 +4,21 @@ from ..view import view
 from random import choice, random, randrange
 from csv import DictWriter
 
+from joblib import load
+from .. import features
+import numpy as np
+
+
+def flatten(features, prefix=''):
+    ret = {}
+    for k, v in features.items():
+        if type(v) is dict:
+            ret.update(flatten(v, prefix='{}{}_'.format(prefix, k)))
+        else:
+            ret[prefix + k] = v
+    return ret
+
+
 class Player(object):
     def __init__(self, color, board):
         self.color = color
@@ -400,14 +415,6 @@ class AI(Player):
     def record_features(self, output_file=None):
         if output_file is None:
             output_file = '{}_features.csv'.format(self.color)
-        def flatten(features, prefix=''):
-            ret = {}
-            for k, v in features.items():
-                if type(v) is dict:
-                    ret.update(flatten(v, prefix='{}{}_'.format(prefix, k)))
-                else:
-                    ret[prefix + k] = v
-            return ret
         fieldnames = sorted(flatten(self.state_tree.features).keys(), key=str.lower)
         fieldnames.append('win_prop')
         with open(output_file, 'w') as output_file:
@@ -488,3 +495,42 @@ class RandomAI(AI):
 
     def choose_action(self):
         return self.plan.pop(0)
+
+
+class BasicSearchAI(RandomAI):
+
+    def __init__(self, color, board):
+        super().__init__(color, board)
+        self.model = load("{}/{}.joblib".format(features.MODELS_PATH, color))
+
+    # TODO - no insight into robber placement strategies
+    # def choose_robber_placement(self):
+
+    # TODO - just initialization? seems like not really
+    # def choose_road_placement(self, sett=None):
+    # def choose_settlement_placement(self, pregame=False, board=None):
+
+    def take_turn(self, turn, game, pregame=False, mock_up=None):
+        if pregame:
+            return turn.pregame_player_action(mock_up=mock_up)
+        self.plan = choice(self.possible_actions())
+
+        new_state = self.State(parent=self.current_state, **self.extract_features(game))
+        self.current_state = new_state
+
+        # TODO lookahead, making decision on win_prop estimate
+        # TODO this feature extraction should be double checked too for alignment/ordering
+        features = np.array(list(flatten(self.current_state.features).values()))
+        features = features.reshape(1, -1)
+        win_prop = self.model.predict(features)
+        # print(win_prop)
+        
+        if not self.state_tree:
+            self.state_tree = new_state
+        if turn.current_player is not self:
+            import pdb, inspect; from pprint import pprint; pdb.set_trace()
+        return turn.player_action()
+
+    # TODO - seems okay as is?
+    # def choose_action(self):
+

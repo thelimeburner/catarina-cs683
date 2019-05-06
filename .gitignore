@@ -1,4 +1,7 @@
 *.pyc
 .idea/
+.vscode/
 __pycache__/
 
+data/features/*
+data/models/*
