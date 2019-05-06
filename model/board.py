@@ -55,7 +55,7 @@ class Road(object):
         self.neighbor_roads = []
         self.neighbor_settlements = []
 
-    def check_avilability(self):
+    def check_availabilty(self):
         if self.available:
             return True
         else:
@@ -68,6 +68,9 @@ class Road(object):
         return 'r{}'.format(self.road_id)
 
     __repr__ = __str__
+
+    def __int__(self):
+        return self.road_id
 
 
 class Settlement(object):
@@ -85,7 +88,7 @@ class Settlement(object):
         self.neighbor_roads = []
         self.port = None
 
-    def check_avilability(self):
+    def check_availabilty(self):
         if self.available:
             return True
         else:

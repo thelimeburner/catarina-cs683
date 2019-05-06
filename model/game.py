@@ -50,7 +50,7 @@ class Game(object):
             while not done:
                 if len(self.turn_history) >= MAX_TURNS:
                     to_turn = max(0, len(self.turn_history) - randrange(48, len(self.turn_history)))
-                    print('Turn {} reached: reverting to turn {}'.format(MAX_TURNS, to_turn))
+                    #print('Turn {} reached: reverting to turn {}'.format(MAX_TURNS, to_turn))
                     for player in self.players:
                         player.end_game_hook(self, winner=True, to_turn=to_turn)
                     self.revert_turn(to_turn)

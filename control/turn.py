@@ -32,7 +32,7 @@ class Turn(object):
                 del MOCK_UP[0]
                 if self.build_settlement(choice_sett, first=True, pay=False):
                     break
-            choice_sett = self.current_player.choose_settlement_placement()
+            choice_sett = self.current_player.choose_settlement_placement(pregame=True, board=self.board)
             if choice_sett == 'undo':
                 if len(self.actions) > 0:
                     self.undo()
@@ -55,7 +55,7 @@ class Turn(object):
                 del MOCK_UP[0]
                 if self.build_road(choice_road, choice_sett, pay=False):
                     break
-            choice_road = self.current_player.choose_road_placement()
+            choice_road = self.current_player.choose_road_placement(self.board.settlements[choice_sett])
             if choice_road == 'undo':
                 if len(self.actions) > 0:
                     self.undo()
@@ -211,7 +211,7 @@ class Turn(object):
         return False
 
     def build_road(self, road_id, sett=None, pay=True, silent=False):
-        road = self.board.roads[road_id]
+        road = self.board.roads[int(road_id)]
         if self.current_player.roads > 0:
             if sett is not None:
                 if not self.road_spot_available(road, self.board.settlements[sett]):

@@ -38,7 +38,7 @@ class Player(object):
                 print('Please input an integer from 0 through 18, inclusive')
         return tile_id
 
-    def choose_settlement_placement(self):
+    def choose_settlement_placement(self, pregame=False, board=None):
         tile_id = None
         while tile_id is None:
             try:
@@ -52,7 +52,7 @@ class Player(object):
                 print('Please input an integer from 0 through 53, inclusive, or "undo"')
         return tile_id
 
-    def choose_road_placement(self):
+    def choose_road_placement(self, sett=None):
         tile_id = None
         while tile_id is None:
             try:
@@ -90,7 +90,7 @@ class Player(object):
         for road in roads:
             for neighbor in road.neighbor_roads:
                 corner = (set(neighbor.neighbor_settlements)&set(road.neighbor_settlements)).pop()
-                if neighbor.check_avilability() and (corner.owner == None or corner.owner == self):
+                if neighbor.check_availabilty() and (corner.owner == None or corner.owner == self):
                     ret.append(neighbor)
         return ret
 
@@ -273,10 +273,28 @@ class AI(Player):
     def choose_robber_placement(self):
         raise NotImplementedError
 
-    def choose_settlement_placement(self):
+    def choose_settlement_placement(self, pregame=False, board=None):
+        if pregame:
+            best = None
+            best_score = 0
+            for s in board.settlements:
+                if not s.check_availabilty():
+                    continue
+                avail = True
+                for n in s.neighbors:
+                    if not n.check_availabilty():
+                        avail = False
+                        break
+                if not avail:
+                    continue
+                score = sum([t.number for t in s.tiles if t.number])
+                if score > best_score:
+                    best_score = score
+                    best = s
+            return best.settlement_id
         raise NotImplementedError
 
-    def choose_road_placement(self):
+    def choose_road_placement(self, sett=None):
         raise NotImplementedError
 
     def choose_action(self):
@@ -359,10 +377,11 @@ class AI(Player):
                 print('{} won with {} VP in {} turns!'.format(self.color.capitalize(), self.points, len(game.turn_history)))
             else:
                 print('{} won with {} VP in {} turns! Reverting to turn {}.'.format(self.color.capitalize(), self.points, len(game.turn_history), to_turn))
-        for ancestor in self.current_state.ancestry():
-            if won:
-                ancestor.num_wins += 1
-            ancestor.num_leaves += 1
+        if winner:
+            for ancestor in self.current_state.ancestry():
+                if won:
+                    ancestor.num_wins += 1
+                ancestor.num_leaves += 1
         if self.turns_remaining > 0:
             for i, ancestor in enumerate(self.current_state.ancestry()):
                 if i == tree_depth - to_turn:
@@ -441,10 +460,18 @@ class RandomAI(AI):
     def choose_robber_placement(self):
         return randrange(19)
 
-    def choose_road_placement(self):
-        return choice(self.available_roads())
+    def choose_road_placement(self, sett=None):
+        if sett is None:
+            return choice(self.available_roads())
+        roads = []
+        for road in sett.neighbor_roads:
+            if road.available:
+                roads.append(road)
+        return choice(roads)
 
-    def choose_settlement_placement(self):
+    def choose_settlement_placement(self, pregame=False, board=None):
+        if pregame:
+            return AI.choose_settlement_placement(self, pregame=True, board=board)
         return choice(self.available_settlements())
 
     def take_turn(self, turn, game, pregame=False, mock_up=None):
