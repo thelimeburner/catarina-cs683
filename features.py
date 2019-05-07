@@ -1,5 +1,6 @@
 import glob
 import os
+import re
 from joblib import dump
 from typing import Dict
 
@@ -20,12 +21,13 @@ def read(files) -> Dict[str, pd.DataFrame]:
     # Organize multiple runs into the respective players
     players = {}
     for f in files:
-        name = os.path.basename(f).split("_")[0]
-        players.setdefault(name, []).append(f)
+        player_name = re.match(r"^.*?([A-Za-z]+)_.*$", os.path.basename(f)).group(1)
+        players.setdefault(player_name, []).append(f)
 
     # Concatenate all the data into just one training set
     training_sets = {}
     for player, data in players.items():
+        print("Player {} fo`und, with {} files".format(player, len(data)))
         df = pd.concat(
             [pd.read_csv(file_path) for file_path in data], 
             axis=0, 
