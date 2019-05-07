@@ -276,7 +276,7 @@ class AI(Player):
         self.plan = []
         self.state_tree = None
         self.current_state = None
-        self.turns_remaining = 10**4
+        self.turns_remaining = 5*10**3
         super().__init__(color, board)
 
     def announce(self, event, **kwargs):
@@ -414,7 +414,8 @@ class AI(Player):
 
     def record_features(self, output_file=None):
         if output_file is None:
-            output_file = '{}_features.csv'.format(self.color)
+            r = randrange(10**6-1)
+            output_file = '{}_features_{:06d}.csv'.format(self.color, r)
         fieldnames = sorted(flatten(self.state_tree.features).keys(), key=str.lower)
         fieldnames.append('win_prop')
         with open(output_file, 'w') as output_file:
@@ -513,18 +514,31 @@ class BasicSearchAI(RandomAI):
     def take_turn(self, turn, game, pregame=False, mock_up=None):
         if pregame:
             return turn.pregame_player_action(mock_up=mock_up)
-        self.plan = choice(self.possible_actions())
 
         new_state = self.State(parent=self.current_state, **self.extract_features(game))
         self.current_state = new_state
 
+        best_plan = None
+        best_score = -1
+        for plan in self.possible_actions():
+            self.plan = plan
+            turn.player_action()
+            score = self.model.predict(np.array(list(flatten(self.extract_features(game)).values())).reshape(1, -1))
+            if score > best_score:
+                best_score = score
+                best_plan = plan
+            turn.undo_turn()
+            turn.roll.do()
+
+        self.plan = best_plan
+
         # TODO lookahead, making decision on win_prop estimate
         # TODO this feature extraction should be double checked too for alignment/ordering
-        features = np.array(list(flatten(self.current_state.features).values()))
+        '''features = np.array(list(flatten(self.current_state.features).values()))
         features = features.reshape(1, -1)
-        win_prop = self.model.predict(features)
+        win_prop = self.model.predict(features)'''
         # print(win_prop)
-        
+
         if not self.state_tree:
             self.state_tree = new_state
         if turn.current_player is not self:
@@ -533,4 +547,3 @@ class BasicSearchAI(RandomAI):
 
     # TODO - seems okay as is?
     # def choose_action(self):
-
