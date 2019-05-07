@@ -22,12 +22,13 @@ def read(files) -> Dict[str, pd.DataFrame]:
     players = {}
     for f in files:
         player_name = re.match(r"^.*?([A-Za-z]+)_.*$", os.path.basename(f)).group(1)
+        print(player_name, f)
         players.setdefault(player_name, []).append(f)
 
     # Concatenate all the data into just one training set
     training_sets = {}
     for player, data in players.items():
-        print("Player {} fo`und, with {} files".format(player, len(data)))
+        print("Player {} found, with {} files".format(player, len(data)))
         df = pd.concat(
             [pd.read_csv(file_path) for file_path in data], 
             axis=0, 
