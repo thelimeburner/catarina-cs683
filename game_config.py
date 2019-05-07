@@ -28,7 +28,7 @@ PLAYERS_ORDER = {
     }
 }
 
-PLAYERS_SPECIES = ['RandomAI', 'RandomAI', 'RandomAI', 'Player']
+PLAYERS_SPECIES = ['BasicSearchAI', 'RandomAI', 'RandomAI', 'Player']
 
 # the target number of victory points
 VP = 8
