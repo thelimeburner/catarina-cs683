@@ -2,6 +2,8 @@ import networkx as nx
 from collections import defaultdict
 from random import randint, randrange
 
+from time import time
+
 from ..game_config import *
 from ..model import players
 from ..view import view
@@ -18,6 +20,7 @@ class Game(object):
         self.robber = None
         self.turn = None
         self.winner = None
+        self.times = {}
 
         self.turn_history = []
 
@@ -65,7 +68,10 @@ class Game(object):
                     if self.current_player.take_turn(self.turn, self, True, MOCK_UP):
                         done = self.end_pregame_turn()
                 else:
+                    start = time()
                     if self.current_player.take_turn(self.turn, self):
+                        self.times[self.current_player] = self.times.get(self.current_player, [])
+                        self.times[self.current_player].append(time()-start)
                         done = self.end_turn()
         except KeyboardInterrupt as e:
             print("Keyboard interrupt: recording features and raising.")
@@ -117,6 +123,13 @@ class Game(object):
 
     def end_game(self):
         print("The winner is: {} with {} victory points".format(self.winner.color.capitalize(), self.winner.points))
+        with open('winners.csv', 'a') as f:
+            f.write(self.winner.color.capitalize())
+        for player in self.players:
+            time = sum(self.times[player])/len(self.times[player])
+            print('{} player: {:.2f} seconds per turn'.format(player.color.capitalize(), time))
+            with open('{}_times.csv', 'a') as f:
+                f.write('{:.2f}'.format(time))
         return True
 
     def count_largest_army(self):

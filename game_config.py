@@ -42,7 +42,7 @@ VP = 8
 MAX_TURNS = 120
 
 # number of turns to run total in simulations
-TOTAL_TURNS = 2*10**3
+TOTAL_TURNS = 0
 
 """
 User input options:
