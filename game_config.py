@@ -41,6 +41,9 @@ VP = 8
 # the maximum number of turns a game should run for before giving up
 MAX_TURNS = 120
 
+# number of turns to run total in simulations
+TOTAL_TURNS = 2*10**3
+
 """
 User input options:
     Keyboard

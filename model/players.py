@@ -7,7 +7,7 @@ from csv import DictWriter
 from joblib import load
 from .. import features
 import numpy as np
-from ..game_config import using_search_AI
+from ..game_config import using_search_AI, TOTAL_TURNS
 
 
 def flatten(features, prefix=''):
@@ -277,7 +277,7 @@ class AI(Player):
         self.plan = []
         self.state_tree = None
         self.current_state = None
-        self.turns_remaining = 5*10**3
+        self.turns_remaining = TOTAL_TURNS
         super().__init__(color, board)
 
     def announce(self, event, **kwargs):
