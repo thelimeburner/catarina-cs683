@@ -55,7 +55,7 @@ class Game(object):
             while not done:
                 if len(self.turn_history) >= MAX_TURNS:
                     to_turn = max(0, len(self.turn_history) - randrange(48, len(self.turn_history)))
-                    #print('Turn {} reached: reverting to turn {}'.format(MAX_TURNS, to_turn))
+                    print('Turn {} reached: reverting to turn {}'.format(MAX_TURNS, to_turn))
                     for player in self.players:
                         player.end_game_hook(self, winner=True, to_turn=to_turn)
                     self.revert_turn(to_turn)
@@ -124,12 +124,12 @@ class Game(object):
     def end_game(self):
         print("The winner is: {} with {} victory points".format(self.winner.color.capitalize(), self.winner.points))
         with open('winners.csv', 'a') as f:
-            f.write(self.winner.color.capitalize())
+            f.write(self.winner.color.capitalize() + '\n')
         for player in self.players:
             time = sum(self.times[player])/len(self.times[player])
             print('{} player: {:.4f} seconds per turn'.format(player.color.capitalize(), time))
             with open('{}_times.csv', 'a') as f:
-                f.write('{:.4f}'.format(time))
+                f.write('{:.4f}\n'.format(time))
         return True
 
     def count_largest_army(self):
