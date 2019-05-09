@@ -22,9 +22,10 @@ class Game(object):
         self.turn_history = []
 
     def determine_starting_color(self):
-        first_color = randint(0, len(self.playing_colors) - 1)
-        self.first_player = self.playing_colors[first_color]
+        # first_color = randint(0, len(self.playing_colors) - 1)
+        # self.first_player = self.playing_colors[first_color]
         # print("First player is {}".format(self.first_player.color))
+        self.first_player = self.playing_colors[0]
 
     def seat_players(self):
         player_species = []
@@ -36,6 +37,7 @@ class Game(object):
             self.players[-2].next_player = self.players[-1]
         self.players[-1].next_player = self.players[0]
         self.first_player = self.players[0]
+        print('First player is {}'.format(self.first_player.color))
 
     def player_turn(self, pregame=False):
         self.current_player.show_board(self.board)

@@ -54,7 +54,10 @@ def main():
 
 
 if __name__ == '__main__':
-    tracer = trace.Trace(trace=0, outfile='coverage/{}.trace'.format(int(time.time())))
+    if game_config.using_search_AI:
+        tracer = trace.Trace(trace=0, outfile='coverage/randomx3_{}.trace'.format(int(time.time())))
+    else:
+        tracer = trace.Trace(trace=0, outfile='coverage/bsrandomx2_{}.trace'.format(int(time.time())))
     tracer.run('main()')
     r = tracer.results()
     r.write_results(show_missing=True, coverdir="./coverage", summary=True)

@@ -7,6 +7,7 @@ from csv import DictWriter
 from joblib import load
 from .. import features
 import numpy as np
+from ..game_config import using_search_AI
 
 
 def flatten(features, prefix=''):
@@ -415,7 +416,10 @@ class AI(Player):
     def record_features(self, output_file=None):
         if output_file is None:
             r = randrange(10**6-1)
-            output_file = 'catarina-cs683/data/features/randomx3/{}_features_{:06d}.csv'.format(self.color, r)
+            if using_search_AI:
+                output_file = 'catarina-cs683/data/features/bsrandomx2/{}_features_{:06d}.csv'.format(self.color, r)
+            else:
+                output_file = 'catarina-cs683/data/features/randomx3/{}_features_{:06d}.csv'.format(self.color, r)
         fieldnames = sorted(flatten(self.state_tree.features).keys(), key=str.lower)
         fieldnames.append('win_prop')
         with open(output_file, 'w') as output_file:
