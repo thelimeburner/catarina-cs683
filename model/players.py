@@ -415,7 +415,7 @@ class AI(Player):
     def record_features(self, output_file=None):
         if output_file is None:
             r = randrange(10**6-1)
-            output_file = '{}_features_{:06d}.csv'.format(self.color, r)
+            output_file = 'catarina-cs683/data/features/bsrandomx2/{}_features_{:06d}.csv'.format(self.color, r)
         fieldnames = sorted(flatten(self.state_tree.features).keys(), key=str.lower)
         fieldnames.append('win_prop')
         with open(output_file, 'w') as output_file:
@@ -522,14 +522,14 @@ class BasicSearchAI(RandomAI):
         best_score = -1
         for plan in self.possible_actions():
             self.plan = plan
+            current_plan = list(plan)
             turn.player_action()
             vals = np.array(list(flatten(self.extract_features(game)).values()))
             vals = vals.reshape(1, -1)
-            print(vals)
             score = self.model.predict(vals)
             if score > best_score:
                 best_score = score
-                best_plan = plan
+                best_plan = current_plan
             turn.undo_turn()
             turn.roll.do()
 

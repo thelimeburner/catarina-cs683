@@ -14,8 +14,10 @@ class RollAction(Action):
             self.roll = randint(1, 6) + randint(1, 6)
         self.robber_action = None
         self.cards_gained = {}
+        self.flag = False
 
         def do():
+            self.cards_gained = {}
             self.board.dice = self.roll
             self.player.announce('Dice: {}'.format(self.roll))
             if self.board.dice == 7:
@@ -60,6 +62,9 @@ class RollAction(Action):
                 for resource in resources:
                     player.resource_cards[resource] -= resources[resource]
                     self.board.cards_deck.accept(resource, resources[resource])
+            if min(self.player.resource_cards.values()) < 0:
+                self.flag=True
+                self.do()
             return True
 
         super().__init__(do, undo)
@@ -100,6 +105,9 @@ class PayAction(Action):
             for resource, count in self.costs[item].items():
                 count = self.resource_deck.give(resource, count)
                 player.resource_cards[resource] += count
+
+            if min(self.player.resource_cards.values()) < 0:
+                import pdb, inspect; pdb.set_trace()
             return True
 
         super().__init__(do, undo)
@@ -149,9 +157,14 @@ class TradeAction(Action):
             self.deck.accept(self.new)
             self.player.resource_cards[self.old] += new_cards
             self.player.resource_cards[self.new] -= 1
+            if min(self.player.resource_cards.values()) < 0:
+                import pdb, inspect; pdb.set_trace()
             return True
 
         super().__init__(do, undo)
+
+    def __str__(self):
+        return '{}{}1{}'.format(self.count, self.old, self.new)
 
 class BuildRoadAction(Action):
     def __init__(self, board, player, road, pay=False):

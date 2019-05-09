@@ -309,6 +309,7 @@ class Turn(object):
             action = actions.PlaceRobberAction(self.board, self.current_player, tile_id)
         self.actions.append(action)
         if action.do():
+            self.actions.appenend(action)
             return True
 
     def undo(self):
@@ -318,6 +319,8 @@ class Turn(object):
         if not last_action.undo():
             print("undo failed")
             import pdb, inspect; from pprint import pprint; pdb.set_trace()
+        if min(self.current_player.resource_cards.values()) < 0:
+            import pdb, inspect; pdb.set_trace()
         self.actions = self.actions[:-1]
 
     def undo_turn(self):
@@ -350,9 +353,8 @@ class Turn(object):
             self.current_player.announce("Build Roads Development Card - Road {}/2:".format(roads_built + 1))
             while True:
                 action = actions.BuildRoadsDCAction(self.board, self.current_player, roads_built)
-                self.actions.append(action)
                 if action.do():
-                    pass
+                    self.actions.append(action)
                 choice = input("{}, what road would you like to build: ".format(self.current_player.color.capitalize()))
                 if choice == "end":
                     self.undo()
@@ -369,8 +371,8 @@ class Turn(object):
                 break
         self.current_player.announce("Finished playing the Build Roads Development Card")
         action = actions.BuildRoadsDCAction(self.board, self.current_player, roads_built)
-        self.actions.append(action)
         if action.do():
+            self.actions.append(action)
             return True
 
     def plenty(self):
