@@ -1,5 +1,5 @@
 import json
-import logging
+import logging, trace, time
 import os
 
 from . import globals
@@ -54,4 +54,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    tracer = trace.Trace(trace=0, outfile='coverage/{}.trace'.format(int(time.time())))
+    tracer.run('main()')
+    r = tracer.results()
+    r.write_results(show_missing=True, coverdir="./coverage", summary=True)

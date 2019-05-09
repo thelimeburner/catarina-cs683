@@ -14,7 +14,6 @@ class RollAction(Action):
             self.roll = randint(1, 6) + randint(1, 6)
         self.robber_action = None
         self.cards_gained = {}
-        self.flag = False
 
         def do():
             self.cards_gained = {}
