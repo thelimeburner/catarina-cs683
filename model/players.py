@@ -528,7 +528,7 @@ class BasicSearchAI(RandomAI):
             values = list(flatten(self.extract_features(game)).items())
             sorted_values = [kv[1] for kv in sorted(values, key=lambda kv: str.lower(kv[0]))]
             values = [int(v) if isinstance(v, bool) else v for v in sorted_values]
-            score = self.model.predict(np.array(sorted_values).reshape(1, -1))
+            score = self.model.predict(np.array(values).reshape(1, -1))
 
             if score > best_score:
                 best_score = score
