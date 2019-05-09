@@ -127,9 +127,9 @@ class Game(object):
             f.write(self.winner.color.capitalize())
         for player in self.players:
             time = sum(self.times[player])/len(self.times[player])
-            print('{} player: {:.2f} seconds per turn'.format(player.color.capitalize(), time))
+            print('{} player: {:.4f} seconds per turn'.format(player.color.capitalize(), time))
             with open('{}_times.csv', 'a') as f:
-                f.write('{:.2f}'.format(time))
+                f.write('{:.4f}'.format(time))
         return True
 
     def count_largest_army(self):
