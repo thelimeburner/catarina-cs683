@@ -7,6 +7,7 @@ from csv import DictWriter
 from joblib import load
 from .. import features
 import numpy as np
+from ..game_config import using_search_AI, TOTAL_TURNS
 
 
 def flatten(features, prefix=''):
@@ -276,7 +277,7 @@ class AI(Player):
         self.plan = []
         self.state_tree = None
         self.current_state = None
-        self.turns_remaining = 5*10**3
+        self.turns_remaining = TOTAL_TURNS
         super().__init__(color, board)
 
     def announce(self, event, **kwargs):
@@ -302,7 +303,8 @@ class AI(Player):
                         break
                 if not avail:
                     continue
-                score = sum([t.number for t in s.tiles if t.number])
+                odds_map = {2: 1, 3:2, 4:3, 5:4, 6:5, 8:5, 9:4, 10:3, 11:2, 12:1}
+                score = sum([odds_map[t.number] for t in s.tiles if t.number])
                 if score > best_score:
                     best_score = score
                     best = s
@@ -415,7 +417,10 @@ class AI(Player):
     def record_features(self, output_file=None):
         if output_file is None:
             r = randrange(10**6-1)
-            output_file = 'catarina-cs683/data/features/randomx3/{}_features_{:06d}.csv'.format(self.color, r)
+            if using_search_AI:
+                output_file = 'catarina-cs683/data/features/bsrandomx2/{}_features_{:06d}.csv'.format(self.color, r)
+            else:
+                output_file = 'catarina-cs683/data/features/randomx3/{}_features_{:06d}.csv'.format(self.color, r)
         fieldnames = sorted(flatten(self.state_tree.features).keys(), key=str.lower)
         fieldnames.append('win_prop')
         with open(output_file, 'w') as output_file:

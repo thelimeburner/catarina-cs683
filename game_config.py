@@ -28,13 +28,21 @@ PLAYERS_ORDER = {
     }
 }
 
-PLAYERS_SPECIES = ['RandomAI', 'RandomAI', 'RandomAI', 'Player']
+using_search_AI = True
+
+if using_search_AI:
+    PLAYERS_SPECIES = ['BasicSearchAI', 'RandomAI', 'RandomAI', 'Player']
+else:
+    PLAYERS_SPECIES = ['RandomAI', 'RandomAI', 'RandomAI', 'Player']
 
 # the target number of victory points
 VP = 8
 
 # the maximum number of turns a game should run for before giving up
 MAX_TURNS = 120
+
+# number of turns to run total in simulations
+TOTAL_TURNS = 0
 
 """
 User input options:

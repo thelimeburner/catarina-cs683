@@ -2,6 +2,8 @@ import networkx as nx
 from collections import defaultdict
 from random import randint, randrange
 
+from time import time
+
 from ..game_config import *
 from ..model import players
 from ..view import view
@@ -18,13 +20,15 @@ class Game(object):
         self.robber = None
         self.turn = None
         self.winner = None
+        self.times = {}
 
         self.turn_history = []
 
     def determine_starting_color(self):
-        first_color = randint(0, len(self.playing_colors) - 1)
-        self.first_player = self.playing_colors[first_color]
+        # first_color = randint(0, len(self.playing_colors) - 1)
+        # self.first_player = self.playing_colors[first_color]
         # print("First player is {}".format(self.first_player.color))
+        self.first_player = self.playing_colors[0]
 
     def seat_players(self):
         player_species = []
@@ -36,6 +40,7 @@ class Game(object):
             self.players[-2].next_player = self.players[-1]
         self.players[-1].next_player = self.players[0]
         self.first_player = self.players[0]
+        print('First player is {}'.format(self.first_player.color))
 
     def player_turn(self, pregame=False):
         self.current_player.show_board(self.board)
@@ -50,7 +55,7 @@ class Game(object):
             while not done:
                 if len(self.turn_history) >= MAX_TURNS:
                     to_turn = max(0, len(self.turn_history) - randrange(48, len(self.turn_history)))
-                    #print('Turn {} reached: reverting to turn {}'.format(MAX_TURNS, to_turn))
+                    print('Turn {} reached: reverting to turn {}'.format(MAX_TURNS, to_turn))
                     for player in self.players:
                         player.end_game_hook(self, winner=True, to_turn=to_turn)
                     self.revert_turn(to_turn)
@@ -63,7 +68,10 @@ class Game(object):
                     if self.current_player.take_turn(self.turn, self, True, MOCK_UP):
                         done = self.end_pregame_turn()
                 else:
+                    start = time()
                     if self.current_player.take_turn(self.turn, self):
+                        self.times[self.current_player] = self.times.get(self.current_player, [])
+                        self.times[self.current_player].append(time()-start)
                         done = self.end_turn()
         except KeyboardInterrupt as e:
             print("Keyboard interrupt: recording features and raising.")
@@ -115,6 +123,13 @@ class Game(object):
 
     def end_game(self):
         print("The winner is: {} with {} victory points".format(self.winner.color.capitalize(), self.winner.points))
+        with open('winners.csv', 'a') as f:
+            f.write(self.winner.color.capitalize() + '\n')
+        for player in self.players:
+            time = sum(self.times[player])/len(self.times[player])
+            print('{} player: {:.4f} seconds per turn'.format(player.color.capitalize(), time))
+            with open('{}_times.csv', 'a') as f:
+                f.write('{:.4f}\n'.format(time))
         return True
 
     def count_largest_army(self):
