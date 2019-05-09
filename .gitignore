@@ -1,7 +1,9 @@
+*.png
 *.pyc
 .idea/
 .vscode/
 __pycache__/
 
+data/
 data/features/*
 data/models/*
