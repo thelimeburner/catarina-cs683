@@ -1,13 +1,14 @@
 from .. import globals
 from ..view import view
+from .. import features
 
 from random import choice, random, randrange
 from csv import DictWriter
-
+import psutil
 from joblib import load
-from .. import features
 import numpy as np
 
+import time
 
 def flatten(features, prefix=''):
     ret = {}
@@ -42,6 +43,8 @@ class Player(object):
         self.dev_cards = []
         self.knights = 0
         self.points = 0
+
+        self.start_time = time.time()*1000
 
     def choose_robber_placement(self):
         tile_id = None
@@ -276,7 +279,7 @@ class AI(Player):
         self.plan = []
         self.state_tree = None
         self.current_state = None
-        self.turns_remaining = 5*10**3
+        self.turns_remaining = 4*10**3
         super().__init__(color, board)
 
     def announce(self, event, **kwargs):
@@ -413,8 +416,20 @@ class AI(Player):
         return False
 
     def record_features(self, output_file=None):
+        r = randrange(10**6-1)
+
+        # dump memory info in terse format
+        memory_file_path = 'catarina-cs683/data/features/bsrandomx2/{}_stats_{:06d}.csv'.format(self.color, r)
+        with open(memory_file_path, 'w') as f:
+            stats = psutil.virtual_memory()._asdict()
+            stats['cpu'] = psutil.cpu_percent()
+            stats['time'] = time.time()*1000 - self.start_time
+
+            writer = DictWriter(f, fieldnames=list(stats.keys()))
+            writer.writeheader()
+            writer.writerow(stats)
+
         if output_file is None:
-            r = randrange(10**6-1)
             output_file = 'catarina-cs683/data/features/bsrandomx2/{}_features_{:06d}.csv'.format(self.color, r)
         fieldnames = sorted(flatten(self.state_tree.features).keys(), key=str.lower)
         fieldnames.append('win_prop')

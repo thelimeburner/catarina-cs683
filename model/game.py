@@ -1,6 +1,7 @@
 import networkx as nx
 from collections import defaultdict
 from random import randint, randrange
+import time
 
 from ..game_config import *
 from ..model import players
@@ -20,6 +21,8 @@ class Game(object):
         self.winner = None
 
         self.turn_history = []
+        self.start_time = time.time() * 1000
+        self.turn_timers = []
 
     def determine_starting_color(self):
         first_color = randint(0, len(self.playing_colors) - 1)
@@ -57,6 +60,12 @@ class Game(object):
                     self.current_player = self.current_player.next_player
                     self.turn = Turn(self.board, self.current_player)
                     self.turn_history.append(self.turn)
+
+                    # timing schenanigans
+                    # current_ms = time.time()*1000 - self.start_time
+                    # self.turn_timers
+                    # self.turn_timers.append(current_ms)
+                    
                     self.turn.roll = actions.RollAction(self.board, self.current_player)
                     self.turn.roll.do()
                 if pregame:
