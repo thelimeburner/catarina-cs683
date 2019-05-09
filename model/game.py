@@ -22,6 +22,7 @@ class Game(object):
         self.winner = None
         self.times = {}
         self.revert_counter = 5
+        self.start_time = time()
 
         self.turn_history = []
 
@@ -73,6 +74,8 @@ class Game(object):
                         done = self.end_pregame_turn()
                 else:
                     start = time()
+                    if start - self.start_time > 450:
+                        raise
                     if self.current_player.take_turn(self.turn, self):
                         self.times[self.current_player] = self.times.get(self.current_player, [])
                         self.times[self.current_player].append(time()-start)
