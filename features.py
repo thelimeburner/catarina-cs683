@@ -95,7 +95,7 @@ def save(model, save_file) -> None:
 
 
 if __name__ == "__main__":
-    features_dir = glob.glob("{}/**/*.csv".format(FEATURES_PATH), recursive=True)
+    features_dir = glob.glob("{}/**/*features*.csv".format(FEATURES_PATH), recursive=True)
     os.makedirs(MODELS_PATH, exist_ok=True)
 
     player_data = read(features_dir)

@@ -524,9 +524,12 @@ class BasicSearchAI(RandomAI):
             self.plan = plan
             current_plan = list(plan)
             turn.player_action()
-            vals = np.array(list(flatten(self.extract_features(game)).values()))
-            vals = vals.reshape(1, -1)
-            score = self.model.predict(vals)
+
+            values = list(flatten(self.extract_features(game)).items())
+            sorted_values = [kv[1] for kv in sorted(values, key=lambda kv: str.lower(kv[0]))]
+            values = [int(v) if isinstance(v, bool) else v for v in sorted_values]
+            score = self.model.predict(np.array(sorted_values).reshape(1, -1))
+
             if score > best_score:
                 best_score = score
                 best_plan = current_plan
