@@ -16,7 +16,7 @@ MODELS_PATH = os.path.join(_BASE_PATH, 'data/models')
 FEATURES_PATH = os.path.join(_BASE_PATH, 'data/features')
 
 # make this an empty dict to run GSCV
-_BEST_GSCV_PARAMETERS = {'n_estimators': 10}  
+_BEST_GSCV_PARAMETERS = {'n_estimators': 10}
 # seems to be very diminishing returns with more estimators. keep it simple then
 _GSCV_PARAMETERS = {'n_estimators': np.array([10,20,40,60,100])}
 
@@ -34,8 +34,8 @@ def read(files) -> Dict[str, pd.DataFrame]:
     for player, data in players.items():
         print("Player {} found, with {} files".format(player, len(data)))
         df = pd.concat(
-            [pd.read_csv(file_path) for file_path in data], 
-            axis=0, 
+            [pd.read_csv(file_path) for file_path in data],
+            axis=0,
             ignore_index=True)
         training_sets[player] = df
 
@@ -60,7 +60,7 @@ def learn(data: pd.DataFrame) -> ensemble.RandomForestRegressor:
         regressor = _chosen_model()
         print("Exploring: {}".format(_GSCV_PARAMETERS))
         grid = model_selection.GridSearchCV(
-            estimator=regressor, 
+            estimator=regressor,
             param_grid=_GSCV_PARAMETERS,
             cv=5,
             n_jobs=-1,
@@ -68,9 +68,9 @@ def learn(data: pd.DataFrame) -> ensemble.RandomForestRegressor:
         )
         grid.fit(train_X, train_y)
         print("Best regressor score: {} n_estimators: {}".format(
-            grid.best_score_, 
+            grid.best_score_,
             grid.best_estimator_.n_estimators))
-        
+
         _BEST_GSCV_PARAMETERS['n_estimators'] = grid.best_estimator_.n_estimators
         regressor = grid.best_estimator_
     else:
@@ -85,7 +85,7 @@ def learn(data: pd.DataFrame) -> ensemble.RandomForestRegressor:
     # Return a model which fully utilizes the training data
     full_X, full_y = data.drop([PREDICT_KEY], axis=1), data[PREDICT_KEY]
     full_regressor = _chosen_model(**_BEST_GSCV_PARAMETERS)
-    full_regressor.fit(full_X, full_y)    
+    full_regressor.fit(full_X, full_y)
 
     return full_regressor
 

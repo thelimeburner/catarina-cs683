@@ -135,7 +135,7 @@ class Game(object):
         for player in self.players:
             time = sum(self.times[player])/len(self.times[player])
             print('{} player: {:.4f} seconds per turn'.format(player.color.capitalize(), time))
-            with open('{}_times.csv'.format(self.winner.color.capitalize()), 'a') as f:
+            with open('{}_times.csv'.format(player.color.capitalize()), 'a') as f:
                 f.write('{:.4f}\n'.format(time))
         return True
 
